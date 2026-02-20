@@ -66,5 +66,3 @@ The application comes pre-loaded with sample data for demonstration:
 - **Searchable Locations**: Berlin, Paris, Hamburg, Munich, London.
 
 ---
-
-*Developed with ❤️ for high-performance logistics operations.*
