@@ -1,0 +1,107 @@
+@page "/shipments"
+@using LogisticsSaaS.Core.Application.Services
+@using LogisticsSaaS.Core.Domain.Entities
+@using LogisticsSaaS.Core.Domain.Enums
+@inject ShipmentService ShipmentService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div class="dashboard-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <h1 style="margin: 0; font-size: 2.5rem;">Shipments</h1>
+            <p style="color: var(--text-muted);">Manage and track your global logistics operations</p>
+        </div>
+        <button class="btn-primary" @onclick='() => Navigation.NavigateTo("/shipments/new")'>
+            <i class="fas fa-plus"></i> New Shipment
+        </button>
+    </div>
+
+    <div class="glass-card" style="margin-bottom: 2rem;">
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="flex: 1;">
+                <input type="text" class="tracking-input" placeholder="Search by Tracking #, Sender, Receiver..." @bind="searchTerm" @bind:event="oninput" />
+            </div>
+            <select class="tracking-input" style="width: 200px; cursor: pointer;" @bind="filterStatus">
+                <option value="">All Statuses</option>
+                @foreach (var status in Enum.GetValues<ShipmentStatus>())
+                {
+                    <option value="@status">@status</option>
+                }
+            </select>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr
+                        style="border-bottom: 1px solid var(--glass-border); color: var(--text-muted); font-size: 0.9rem;">
+                        <th style="padding: 1rem;">Tracking #</th>
+                        <th style="padding: 1rem;">Sender / Receiver</th>
+                        <th style="padding: 1rem;">Origin</th>
+                        <th style="padding: 1rem;">Destination</th>
+                        <th style="padding: 1rem;">Status</th>
+                        <th style="padding: 1rem;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (filteredShipments != null)
+                    {
+                        @foreach (var shipment in filteredShipments)
+                        {
+                            <tr style="border-bottom: 1px solid var(--glass-border); transition: var(--transition);"
+                                class="table-row-hover">
+                                <td style="padding: 1rem; font-weight: 600; font-family: monospace;">@shipment.TrackingNumber</td>
+                                <td style="padding: 1rem;">
+                                    <div style="font-weight: 500;">@shipment.SenderName</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">to @shipment.ReceiverName</div>
+                                </td>
+                                <td style="padding: 1rem;">@shipment.Origin</td>
+                                <td style="padding: 1rem;">@shipment.Destination</td>
+                                <td style="padding: 1rem;">
+                                    <span class="status-badge status-@shipment.Status.ToString().ToLower()">@shipment.Status</span>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <a href="/shipment/@shipment.TrackingNumber"
+                                           style="color: var(--accent); text-decoration: none; font-size: 0.9rem; font-weight: 600;">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted);">Loading shipments...</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-row-hover:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+</style>
+
+@code {
+    private IEnumerable<Shipment>? shipments;
+    private string searchTerm = "";
+    private string filterStatus = "";
+
+    private IEnumerable<Shipment>? filteredShipments => shipments?
+        .Where(s => (string.IsNullOrWhiteSpace(searchTerm) || 
+                     s.TrackingNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                     s.SenderName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                     s.ReceiverName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrWhiteSpace(filterStatus) || s.Status.ToString() == filterStatus));
+
+    protected override async Task OnInitializedAsync()
+    {
+        shipments = await ShipmentService.GetActiveShipmentsAsync();
+    }
+}

@@ -1,0 +1,102 @@
+@page "/customers"
+@using LogisticsSaaS.Core.Application.Services
+@using LogisticsSaaS.Core.Domain.Entities
+@inject CustomerService CustomerService
+@rendermode InteractiveServer
+
+<div class="dashboard-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
+        <div>
+            <h1 style="margin: 0; font-size: 2.5rem;">Customers</h1>
+            <p style="color: var(--text-muted);">Manage your partner network and client relations</p>
+        </div>
+        <button class="btn-primary">
+            <i class="fas fa-plus"></i> Add Customer
+        </button>
+    </div>
+
+    @if (customers == null)
+    {
+        <div style="text-align: center; padding: 4rem;">
+            <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--primary);"></i>
+        </div>
+    }
+    else
+    {
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+            @foreach (var customer in customers)
+            {
+                <div class="glass-card customer-card">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div class="customer-icon" style="background: @customer.Color">
+                            <i class="fas @customer.Icon"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.1rem;">@customer.Name</h3>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">@customer.Id</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <div
+                            style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px;">
+                            <i class="fas fa-envelope" style="width: 16px;"></i> @customer.Email
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted);">
+                            <i class="fas fa-location-dot" style="width: 16px;"></i> @customer.Location
+                        </div>
+                    </div>
+
+                    <div
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border);">
+                        <div>
+                            <div
+                                style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">
+                                Active</div>
+                                <div style="font-size: 1.2rem; font-weight: 700;">@customer.ActiveShipments</div>
+                            </div>
+                            <div>
+                                <div
+                                    style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">
+                                    Total Spent</div>
+                                    <div style="font-size: 1.2rem; font-weight: 700;">@customer.TotalSpent.ToString("C0")</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <style>
+            .customer-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 1.2rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .customer-card {
+                transition: var(--transition);
+                cursor: pointer;
+            }
+
+            .customer-card:hover {
+                transform: translateY(-5px);
+                border-color: var(--primary);
+            }
+        </style>
+
+@code {
+    private IEnumerable<Customer>? customers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        customers = await CustomerService.GetCustomersAsync();
+    }
+}

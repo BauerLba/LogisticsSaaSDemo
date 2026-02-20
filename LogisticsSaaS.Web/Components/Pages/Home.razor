@@ -1,0 +1,145 @@
+﻿@page "/"
+@using LogisticsSaaS.Core.Application.Services
+@using LogisticsSaaS.Core.Domain.Entities
+@using LogisticsSaaS.Core.Domain.Enums
+@inject ShipmentService ShipmentService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Dashboard | LogiFlow</PageTitle>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
+    <div>
+        <h1 style="margin: 0; font-size: 2.5rem;">Logistics Dashboard</h1>
+        <p style="color: var(--text-muted); margin: 0.5rem 0 0 0;">Welcome back! Here's what's happening with your
+            shipments today.</p>
+        </div>
+        <button class="btn-primary" @onclick='() => Navigation.NavigateTo("/shipments/new")'>
+            <i class="fas fa-plus"></i> New Shipment
+        </button>
+    </div>
+
+    <!-- Stats Grid -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="glass-card">
+            <div style="color: var(--text-muted); font-size: 0.9rem;">Total Shipments</div>
+            <div style="font-size: 1.8rem; font-weight: 700; margin-top: 0.5rem;">@shipments?.Count()</div>
+            <div style="color: #4ade80; font-size: 0.8rem; margin-top: 0.5rem;">
+                <i class="fas fa-arrow-up"></i> 12% from last month
+            </div>
+        </div>
+        <div class="glass-card">
+            <div style="color: var(--text-muted); font-size: 0.9rem;">In Transit</div>
+            <div style="font-size: 1.8rem; font-weight: 700; margin-top: 0.5rem;">@shipments?.Count(s => s.Status ==
+                                                                                                             ShipmentStatus.InTransit)</div>
+                <div style="color: var(--accent); font-size: 0.8rem; margin-top: 0.5rem;">
+                    Currently moving
+                </div>
+            </div>
+            <div class="glass-card">
+                <div style="color: var(--text-muted); font-size: 0.9rem;">Pending</div>
+                <div style="font-size: 1.8rem; font-weight: 700; margin-top: 0.5rem;">@shipments?.Count(s => s.Status ==
+                                                                                                                                     ShipmentStatus.Pending)</div>
+                    <div style="color: #fb923c; font-size: 0.8rem; margin-top: 0.5rem;">
+                        Await processing
+                    </div>
+                </div>
+                <div class="glass-card">
+                    <div style="color: var(--text-muted); font-size: 0.9rem;">Delivered (Today)</div>
+                    <div style="font-size: 1.8rem; font-weight: 700; margin-top: 0.5rem;">0</div>
+                    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem;">
+                        Daily goal: 25
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0;">Active Shipments</h3>
+                    <div style="width: 300px;">
+                        <input type="text" class="tracking-input" placeholder="Search tracking number..."
+                               @bind="dashboardSearchTerm" @onkeyup="HandleDashboardSearch" />
+                    </div>
+                </div>
+    
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr
+                            style="text-align: left; border-bottom: 1px solid var(--glass-border); color: var(--text-muted); font-size: 0.9rem;">
+                            <th style="padding: 1rem;">TRACKING #</th>
+                            <th style="padding: 1rem;">SENDER / RECEIVER</th>
+                            <th style="padding: 1rem;">ROUTE</th>
+                            <th style="padding: 1rem;">WEIGHT</th>
+                            <th style="padding: 1rem;">STATUS</th>
+                            <th style="padding: 1rem;">EST. DELIVERY</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (filteredShipments == null)
+                        {
+                            <tr>
+                                <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted);">Loading data...
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var shipment in filteredShipments)
+                            {
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;"
+                                    onmouseover="this.style.background='rgba(255,255,255,0.02)'"
+                                    onmouseout="this.style.background='transparent'">
+                                    <td style="padding: 1rem; font-family: monospace;">
+                                        <a href="/shipment/@shipment.TrackingNumber"
+                                               style="color: var(--accent); text-decoration: none; font-weight: 600;">
+                                            @shipment.TrackingNumber
+                                        </a>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <div style="font-weight: 500;">@shipment.SenderName</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted);">to @shipment.ReceiverName</div>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <div style="font-size: 0.9rem;">@shipment.Origin</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);"><i class="fas fa-arrow-down"
+                                                                                                         style="margin: 2px 0;"></i></div>
+                                            <div style="font-size: 0.9rem;">@shipment.Destination</div>
+                                        </td>
+                                        <td style="padding: 1rem;">@shipment.Weight kg</td>
+                                        <td style="padding: 1rem;">
+                                            <span class="status-badge status-@shipment.Status.ToString().ToLower()">
+                                                @shipment.Status
+                                            </span>
+                                        </td>
+                                        <td style="padding: 1rem; color: var(--text-muted);">
+                                            @(shipment.EstimatedDelivery?.ToShortDateString() ?? "TBD")
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+@code {
+    private IEnumerable<Shipment>? shipments;
+    private string dashboardSearchTerm = "";
+
+    private IEnumerable<Shipment>? filteredShipments => shipments?
+        .Where(s => string.IsNullOrWhiteSpace(dashboardSearchTerm) || s.TrackingNumber.Contains(dashboardSearchTerm,
+StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        shipments = await ShipmentService.GetActiveShipmentsAsync();
+    }
+
+    private void HandleDashboardSearch(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(dashboardSearchTerm))
+        {
+            // Optional: Navigate to details on Enter, but here we just filter the list live
+            // Navigation.NavigateTo($"/shipment/{dashboardSearchTerm.Trim().ToUpper()}");
+        }
+    }
+}

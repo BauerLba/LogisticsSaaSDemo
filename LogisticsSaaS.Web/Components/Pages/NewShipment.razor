@@ -1,0 +1,107 @@
+@page "/shipments/new"
+@using LogisticsSaaS.Core.Application.Services
+@using LogisticsSaaS.Core.Domain.Entities
+@using LogisticsSaaS.Core.Domain.Enums
+@inject ShipmentService ShipmentService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div class="dashboard-container" style="max-width: 800px; margin: 0 auto;">
+    <div style="margin-bottom: 2.5rem;">
+        <button @onclick="GoBack"
+                style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; margin-bottom: 1rem;">
+            <i class="fas fa-arrow-left"></i> Back to Shipments
+        </button>
+        <h1 style="margin: 0; font-size: 2.5rem;">New Shipment</h1>
+        <p style="color: var(--text-muted);">Create a new logistics entry for tracking</p>
+    </div>
+
+    <div class="glass-card">
+        <EditForm Model="@newShipment" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div>
+                    <label class="form-label">Sender Name</label>
+                    <InputText @bind-Value="newShipment.SenderName" class="tracking-input"
+                               placeholder="e.g. Acme Corp" />
+                </div>
+                <div>
+                    <label class="form-label">Receiver Name</label>
+                    <InputText @bind-Value="newShipment.ReceiverName" class="tracking-input"
+                               placeholder="e.g. John Doe" />
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div>
+                    <label class="form-label">Origin Location</label>
+                    <InputText @bind-Value="newShipment.Origin" class="tracking-input"
+                               placeholder="e.g. New York, US" />
+                </div>
+                <div>
+                    <label class="form-label">Destination Location</label>
+                    <InputText @bind-Value="newShipment.Destination" class="tracking-input"
+                               placeholder="e.g. Tokyo, JP" />
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div>
+                    <label class="form-label">Weight (kg)</label>
+                    <InputNumber @bind-Value="newShipment.Weight" class="tracking-input" />
+                </div>
+                <div>
+                    <label class="form-label">Initial Status</label>
+                    <InputSelect @bind-Value="newShipment.Status" class="tracking-input">
+                        @foreach (var status in Enum.GetValues<ShipmentStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" @onclick="GoBack" class="btn-secondary"
+                        style="padding: 0.8rem 2rem;">Cancel</button>
+                <button type="submit" class="btn-primary" style="padding: 0.8rem 2rem;">Create Shipment</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+<style>
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        color: white;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+</style>
+
+@code {
+    private Shipment newShipment = new();
+
+    private async Task HandleSubmit()
+    {
+        await ShipmentService.CreateShipmentAsync(newShipment);
+        Navigation.NavigateTo("/shipments");
+    }
+
+    private void GoBack() => Navigation.NavigateTo("/shipments");
+}

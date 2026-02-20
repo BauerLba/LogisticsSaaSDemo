@@ -1,0 +1,208 @@
+@page "/tracking"
+@using LogisticsSaaS.Core.Application.Services
+@using LogisticsSaaS.Core.Domain.Entities
+@using LogisticsSaaS.Core.Domain.Enums
+@inject ShipmentService ShipmentService
+@rendermode InteractiveServer
+
+<div class="dashboard-container">
+    <div style="margin-bottom: 2.5rem; text-align: center;">
+        <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">Track Your Assets</h1>
+        <p style="color: var(--text-muted); font-size: 1.1rem;">Real-time visibility into your global supply chain</p>
+    </div>
+
+    <div style="max-width: 800px; margin: 0 auto;">
+        <div class="glass-card" style="padding: 2.5rem; margin-bottom: 3rem; text-align: center;">
+            <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Enter Tracking Number</h3>
+            <div style="display: flex; gap: 1rem;">
+                <input type="text" class="tracking-input" @bind="trackingNumber" placeholder="e.g. TRK-DEMO-123" style="font-size: 1.2rem; padding: 1rem 1.5rem;" @onkeyup="HandleKeyUp" />
+                <button class="btn-primary" style="padding: 1rem 2.5rem; font-size: 1.1rem;" @onclick="HandleTrack" disabled="@isLoading">
+                    @if (isLoading) { <i class="fas fa-spinner fa-spin"></i> }
+                    else { <span>Track Now</span> }
+                </button>
+            </div>
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p style="color: #ef4444; margin-top: 1rem; font-size: 0.9rem;">@errorMessage</p>
+            }
+            <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                <i class="fas fa-info-circle"></i> Try <strong>TRK-DEMO-123</strong>, <strong>TRK-DEMO-456</strong>, or <strong>TRK-DEMO-789</strong>.
+            </p>
+        </div>
+
+        @if (shipment != null)
+        {
+            <div class="glass-card" style="animation: fadeInUp 0.5s ease-out;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1.5rem;">
+                    <div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Tracking Number</div>
+                        <h2 style="margin: 0; color: var(--accent); font-family: monospace;">@shipment.TrackingNumber</h2>
+                        <span class="status-badge status-@shipment.Status.ToString().ToLower()" style="margin-top: 0.5rem; display: inline-block;">@shipment.Status</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Estimated Delivery</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: white;">@(shipment.EstimatedDelivery?.ToString("MMM dd, yyyy") ?? "Calculating...")</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem;">
+                    <div style="background: rgba(255,255,255,0.02); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 600;">Origin</div>
+                        <div style="font-size: 1.1rem; font-weight: 600;">@shipment.SenderName</div>
+                        <div style="color: var(--text-muted); font-size: 0.9rem;">@shipment.Origin</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.02); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 600;">Destination</div>
+                        <div style="font-size: 1.1rem; font-weight: 600;">@shipment.ReceiverName</div>
+                        <div style="color: var(--text-muted); font-size: 0.9rem;">@shipment.Destination</div>
+                    </div>
+                </div>
+
+                <div class="tracking-timeline">
+                    @{
+                        var history = GetHistory(shipment);
+                    }
+                    @foreach (var milestone in history)
+                    {
+                        <div class="timeline-item @(milestone.IsMain ? "active" : "completed")">
+                            <div class="timeline-dot"></div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <div style="font-weight: 600; font-size: 1.1rem; color: @(milestone.IsMain ? "var(--accent)" : "white")">@milestone.Status</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">@milestone.Time</div>
+                                </div>
+                                <div style="font-size: 0.95rem; color: var(--text-muted);">@milestone.Description</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .tracking-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .tracking-timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.45rem;
+        top: 0.5rem;
+        bottom: 0.5rem;
+        width: 2px;
+        background: var(--glass-border);
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 2.5rem;
+        display: flex;
+        gap: 1.5rem;
+    }
+
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+
+    .timeline-dot {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: var(--bg-dark);
+        border: 2px solid var(--glass-border);
+        position: absolute;
+        left: -1.95rem;
+        z-index: 1;
+        transition: var(--transition);
+    }
+
+    .timeline-item.completed .timeline-dot {
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+    }
+
+    .timeline-item.active .timeline-dot {
+        background: white;
+        border-color: var(--accent);
+        box-shadow: 0 0 15px var(--accent);
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(34, 211, 238, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+    }
+
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+@code {
+    private string trackingNumber = "";
+    private Shipment? shipment;
+    private bool isLoading = false;
+    private string errorMessage = "";
+
+    private async Task HandleTrack()
+    {
+        if (string.IsNullOrWhiteSpace(trackingNumber)) return;
+
+        isLoading = true;
+        errorMessage = "";
+        shipment = null;
+
+        try
+        {
+            await Task.Delay(800); // Simulate network latency for better UX
+            shipment = await ShipmentService.TrackShipmentAsync(trackingNumber.Trim());
+            if (shipment == null)
+            {
+                errorMessage = "No shipment found with that tracking number.";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "An error occurred while tracking the shipment.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await HandleTrack();
+    }
+
+    private List<HistoryItem> GetHistory(Shipment s)
+    {
+        var list = new List<HistoryItem>();
+        
+        if (s.Status >= ShipmentStatus.InTransit)
+            list.Add(new HistoryItem { Time = "Today, 10:45 AM", Status = "In Transit", Description = $"Package is moving from {s.Origin} to {s.Destination}.", IsMain = s.Status == ShipmentStatus.InTransit });
+            
+        if (s.Status >= ShipmentStatus.Processing)
+            list.Add(new HistoryItem { Time = "Yesterday, 02:30 PM", Status = "Processing", Description = "Package has been scanned at the distribution center.", IsMain = s.Status == ShipmentStatus.Processing });
+            
+        list.Add(new HistoryItem { Time = s.CreatedAt.ToString("MMM dd, hh:mm tt"), Status = "Created", Description = "Shipment instruction received.", IsMain = s.Status == ShipmentStatus.Pending });
+        
+        return list;
+    }
+
+    private class HistoryItem
+    {
+        public string Time { get; set; } = "";
+        public string Status { get; set; } = "";
+        public string Description { get; set; } = "";
+        public bool IsMain { get; set; }
+    }
+}

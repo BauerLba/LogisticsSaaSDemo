@@ -1,0 +1,108 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+<div class="nav-sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">
+            <i class="fas fa-truck-fast"></i>
+        </div>
+        <div>
+            <h2 style="margin: 0; font-size: 1.25rem; letter-spacing: -0.5px;">LogiFlow</h2>
+            <small
+                style="color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Enterprise
+                SaaS</small>
+            </div>
+        </div>
+    
+        <nav class="sidebar-nav">
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                <li class="nav-group-label">Main Menu</li>
+                <li>
+                    <NavLink href="" Match="NavLinkMatch.All" class="nav-item">
+                        <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink href="shipments" class="nav-item">
+                        <i class="fas fa-box"></i> <span>Shipments</span>
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink href="tracking" class="nav-item">
+                        <i class="fas fa-map-location-dot"></i> <span>Tracking</span>
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink href="customers" class="nav-item">
+                        <i class="fas fa-users"></i> <span>Customers</span>
+                    </NavLink>
+                </li>
+            
+                <li class="nav-group-label" style="margin-top: 2rem;">Operations</li>
+                <li>
+                    <NavLink href="reports" class="nav-item">
+                        <i class="fas fa-file-invoice-dollar"></i> <span>Billing</span>
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink href="settings" class="nav-item">
+                        <i class="fas fa-gear"></i> <span>Settings</span>
+                    </NavLink>
+                </li>
+            </ul>
+        </nav>
+    
+        <div class="sidebar-footer">
+            <div class="system-status">
+                <div class="status-indicator"></div>
+                <span>System Operational</span>
+            </div>
+        </div>
+    </div>
+
+@code {
+    private string globalSearchTerm = "";
+
+    private void HandleGlobalSearch(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(globalSearchTerm))
+        {
+            Navigation.NavigateTo($"/shipment/{globalSearchTerm.Trim().ToUpper()}");
+            globalSearchTerm = "";
+        }
+    }
+}
+
+<div class="main-content">
+    <header class="top-header">
+        <div class="header-search">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search tracking number (e.g. TRK-DEMO-123)..." @bind="globalSearchTerm"
+                   @onkeyup="HandleGlobalSearch" />
+            <kbd>Enter</kbd>
+        </div>
+        
+        <div class="header-actions">
+            <button class="icon-btn">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge"></span>
+            </button>
+            <div class="user-profile-summary">
+                <div class="user-info">
+                    <span class="user-name">Lucas M.</span>
+                    <span class="user-role">Administrator</span>
+                </div>
+                <div class="user-avatar">
+                    LM
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="content-wrapper">
+            @Body
+        </div>
+    </main>
+</div>
+

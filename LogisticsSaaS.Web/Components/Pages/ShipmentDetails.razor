@@ -1,0 +1,180 @@
+@page "/shipment/{TrackingNumber}"
+@using LogisticsSaaS.Core.Application.Services
+@using LogisticsSaaS.Core.Domain.Entities
+@using LogisticsSaaS.Core.Domain.Enums
+@inject ShipmentService ShipmentService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Shipment @TrackingNumber | LogiFlow</PageTitle>
+
+<div style="margin-bottom: 2rem;">
+    <button @onclick="GoBack"
+            style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </button>
+</div>
+
+@if (shipment == null)
+{
+    <div class="glass-card" style="text-align: center; padding: 4rem;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--primary);"></i>
+        <h2 style="margin-top: 1.5rem;">Finding Shipment...</h2>
+    </div>
+}
+else
+{
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+        <div>
+            <div class="glass-card" style="margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h1 style="margin: 0;">Shipment Details</h1>
+                        <p style="color: var(--accent); font-family: monospace; font-size: 1.2rem;">@shipment.TrackingNumber
+                        </p>
+                    </div>
+                    <span class="status-badge status-@shipment.Status.ToString().ToLower()"
+                          style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                        @shipment.Status
+                    </span>
+                </div>
+
+                <!-- Progress Tracker -->
+                <div style="margin: 3rem 0; display: flex; justify-content: space-between; position: relative;">
+                    <div
+                        style="position: absolute; top: 15px; left: 0; right: 0; height: 4px; background: rgba(255,255,255,0.1); z-index: 1;">
+                    </div>
+                    @{
+                        var currentStatus = shipment.Status;
+                        var statuses = new[] { 
+                            ShipmentStatus.Pending, 
+                            ShipmentStatus.Processing, 
+                            ShipmentStatus.InTransit, 
+                            ShipmentStatus.Delivered 
+                        };
+                    }
+                    @foreach (var status in statuses)
+                    {
+                        var isActive = (int)currentStatus >= (int)status;
+                        <div style="z-index: 2; text-align: center; width: 100px;">
+                            <div
+                                style="width: 34px; height: 34px; border-radius: 50%; background: @(isActive ? "var(--primary)" : "#1e293b"); border: 3px solid @(isActive ? "var(--accent)" : "rgba(255,255,255,0.1)"); margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                                @if ((int)currentStatus > (int)status)
+                                {
+                                    <i class="fas fa-check" style="font-size: 0.8rem;"></i>
+                                }
+                                else if (currentStatus == status)
+                                {
+                                    <div style="width: 10px; height: 10px; border-radius: 50%; background: white; animation: pulse 2s infinite;"></div>
+                                }
+                                else
+                                {
+                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2);"></div>
+                                }
+                            </div>
+                            <div
+                                style="margin-top: 0.5rem; font-size: 0.75rem; color: @(isActive ? "white" : "var(--text-muted)"); font-weight: @(currentStatus == status ? "700" : "400");">
+                                @status</div>
+                            </div>
+                        }
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3>Shipment History</h3>
+                <div style="margin-top: 1.5rem;">
+                    @{
+                        var history = GetHistory(shipment);
+                    }
+                    @foreach (var item in history)
+                    {
+                        <div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <div style="color: var(--text-muted); font-size: 0.8rem; width: 100px;">@item.Time</div>
+                            <div style="position: relative; padding-left: 20px; border-left: 2px solid @(item.IsMain ? "var(--primary)" : "rgba(255,255,255,0.1)");">
+                                <div
+                                    style="position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: @(item.IsMain ? "var(--primary)" : "rgba(255,255,255,0.1)");">
+                                </div>
+                                <div style="font-weight: 600; color: @(item.IsMain ? "white" : "var(--text-muted)");">@item.Status</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">@item.Description</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="glass-card" style="margin-bottom: 2rem;">
+                <h3 style="margin-top: 0;">Info</h3>
+                <div style="margin-bottom: 1rem;">
+                    <div style="color: var(--text-muted); font-size: 0.8rem;">Sender</div>
+                    <div style="font-weight: 500;">@shipment.SenderName</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">@shipment.Origin</div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="color: var(--text-muted); font-size: 0.8rem;">Receiver</div>
+                    <div style="font-weight: 500;">@shipment.ReceiverName</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">@shipment.Destination</div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="color: var(--text-muted); font-size: 0.8rem;">Weight / Size</div>
+                    <div style="font-weight: 500;">@shipment.Weight kg</div>
+                </div>
+            </div>
+
+            <div class="glass-card"
+                    style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(34, 211, 238, 0.2)); border-color: rgba(99, 102, 241, 0.3);">
+                <h3>Need Help?</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted);">If you have any questions regarding this shipment,
+                    please contact our support.</p>
+                    <button class="btn-primary" style="width: 100%; margin-top: 1rem;">Contact Support</button>
+                </div>
+            </div>
+        </div>
+    }
+
+<style>
+    @@keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 211, 238, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+    }
+</style>
+
+@code {
+    [Parameter] public string? TrackingNumber { get; set; }
+    private Shipment? shipment;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(TrackingNumber))
+        {
+            shipment = await ShipmentService.TrackShipmentAsync(TrackingNumber);
+        }
+    }
+
+    private void GoBack() => Navigation.NavigateTo("/");
+
+    private List<HistoryItem> GetHistory(Shipment s)
+    {
+        var list = new List<HistoryItem>();
+        
+        if (s.Status >= ShipmentStatus.InTransit)
+            list.Add(new HistoryItem { Time = "Today, 10:45 AM", Status = "In Transit", Description = $"Package is moving from {s.Origin} to {s.Destination}.", IsMain = s.Status == ShipmentStatus.InTransit });
+            
+        if (s.Status >= ShipmentStatus.Processing)
+            list.Add(new HistoryItem { Time = "Yesterday, 02:30 PM", Status = "Processing", Description = "Package has been scanned at the distribution center.", IsMain = s.Status == ShipmentStatus.Processing });
+            
+        list.Add(new HistoryItem { Time = s.CreatedAt.ToString("MMM dd, hh:mm tt"), Status = "Created", Description = "Shipment instruction received.", IsMain = s.Status == ShipmentStatus.Pending });
+        
+        return list;
+    }
+
+    private class HistoryItem
+    {
+        public string Time { get; set; } = "";
+        public string Status { get; set; } = "";
+        public string Description { get; set; } = "";
+        public bool IsMain { get; set; }
+    }
+}
