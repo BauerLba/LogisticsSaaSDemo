@@ -1,0 +1,95 @@
+@page "/customers/new"
+@using LogisticsSaaS.Core.Application.Services
+@using LogisticsSaaS.Core.Domain.Entities
+@inject CustomerService CustomerService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div class="dashboard-container" style="max-width: 800px; margin: 0 auto;">
+    <div style="margin-bottom: 2.5rem;">
+        <button @onclick="GoBack"
+                style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; margin-bottom: 1rem;">
+            <i class="fas fa-arrow-left"></i> Back to Customers
+        </button>
+        <h1 style="margin: 0; font-size: 2.5rem;">New Customer</h1>
+        <p style="color: var(--text-muted);">Add a new partner or client to your network</p>
+    </div>
+
+    <div class="glass-card">
+        <EditForm Model="@newCustomer" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div>
+                    <label class="form-label">Company / Name *</label>
+                    <InputText @bind-Value="newCustomer.Name" class="tracking-input" placeholder="e.g. Acme Corp" />
+                    <ValidationMessage For="@(() => newCustomer.Name)" style="color: #f87171; font-size: 0.8rem;" />
+                </div>
+                <div>
+                    <label class="form-label">Email *</label>
+                    <InputText @bind-Value="newCustomer.Email" class="tracking-input" placeholder="e.g. ops@acme.com" />
+                    <ValidationMessage For="@(() => newCustomer.Email)" style="color: #f87171; font-size: 0.8rem;" />
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label class="form-label">Location</label>
+                <InputText @bind-Value="newCustomer.Location" class="tracking-input" placeholder="e.g. Berlin, Germany" />
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div>
+                    <label class="form-label">Active Shipments</label>
+                    <InputNumber @bind-Value="newCustomer.ActiveShipments" class="tracking-input" />
+                </div>
+                <div>
+                    <label class="form-label">Total Spent ($)</label>
+                    <InputNumber @bind-Value="newCustomer.TotalSpent" class="tracking-input" />
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" @onclick="GoBack" class="btn-secondary"
+                        style="padding: 0.8rem 2rem;">Cancel</button>
+                <button type="submit" class="btn-primary" style="padding: 0.8rem 2rem;">
+                    <i class="fas fa-plus"></i> Create Customer
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+<style>
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        color: white;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+</style>
+
+@code {
+    private Customer newCustomer = new();
+
+    private async Task HandleSubmit()
+    {
+        await CustomerService.CreateCustomerAsync(newCustomer);
+        Navigation.NavigateTo("/customers");
+    }
+
+    private void GoBack() => Navigation.NavigateTo("/customers");
+}

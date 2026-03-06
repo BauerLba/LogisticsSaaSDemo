@@ -6,4 +6,5 @@ public interface ICustomerRepository
 {
     Task<IEnumerable<Customer>> GetAllAsync();
     Task<Customer?> GetByIdAsync(string id);
+    Task AddAsync(Customer customer);
 }

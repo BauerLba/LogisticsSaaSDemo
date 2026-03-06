@@ -16,4 +16,10 @@ public class InMemoryCustomerRepository : ICustomerRepository
     public Task<IEnumerable<Customer>> GetAllAsync() => Task.FromResult<IEnumerable<Customer>>(_customers);
 
     public Task<Customer?> GetByIdAsync(string id) => Task.FromResult(_customers.FirstOrDefault(c => c.Id == id));
+
+    public Task AddAsync(Customer customer)
+    {
+        _customers.Add(customer);
+        return Task.CompletedTask;
+    }
 }

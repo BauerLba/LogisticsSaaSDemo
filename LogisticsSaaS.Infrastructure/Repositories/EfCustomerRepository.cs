@@ -23,4 +23,10 @@ public class EfCustomerRepository : ICustomerRepository
     {
         return await _context.Customers.FindAsync(id);
     }
+
+    public async Task AddAsync(Customer customer)
+    {
+        await _context.Customers.AddAsync(customer);
+        await _context.SaveChangesAsync();
+    }
 }

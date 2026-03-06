@@ -32,6 +32,7 @@ builder.Services.AddScoped<IShipmentRepository, EfShipmentRepository>();
 builder.Services.AddScoped<ICustomerRepository, EfCustomerRepository>();
 builder.Services.AddScoped<ShipmentService>();
 builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<AppSettingsService>();
 
 var app = builder.Build();
 

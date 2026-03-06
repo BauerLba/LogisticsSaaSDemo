@@ -12,6 +12,11 @@ public class ShipmentService
         _repository = repository;
     }
 
+    public async Task<IEnumerable<Shipment>> GetAllShipmentsAsync()
+    {
+        return await _repository.GetAllAsync();
+    }
+
     public async Task<IEnumerable<Shipment>> GetActiveShipmentsAsync()
     {
         var shipments = await _repository.GetAllAsync();

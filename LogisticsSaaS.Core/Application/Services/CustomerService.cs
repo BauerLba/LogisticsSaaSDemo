@@ -13,4 +13,12 @@ public class CustomerService
     }
 
     public Task<IEnumerable<Customer>> GetCustomersAsync() => _repository.GetAllAsync();
+
+    public Task<Customer?> GetCustomerByIdAsync(string id) => _repository.GetByIdAsync(id);
+
+    public async Task CreateCustomerAsync(Customer customer)
+    {
+        customer.Id = $"CUST-{DateTime.UtcNow.Ticks.ToString()[^8..]}";
+        await _repository.AddAsync(customer);
+    }
 }

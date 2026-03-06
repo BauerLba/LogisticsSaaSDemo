@@ -1,0 +1,101 @@
+@page "/customer/{Id}"
+@using LogisticsSaaS.Core.Application.Services
+@using LogisticsSaaS.Core.Domain.Entities
+@inject CustomerService CustomerService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Customer @Id | LogiFlow</PageTitle>
+
+<div style="margin-bottom: 2rem;">
+    <button @onclick="GoBack"
+            style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-arrow-left"></i> Back to Customers
+    </button>
+</div>
+
+@if (customer == null)
+{
+    <div class="glass-card" style="text-align: center; padding: 4rem;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--primary);"></i>
+        <h2 style="margin-top: 1.5rem;">Loading Customer...</h2>
+    </div>
+}
+else
+{
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+        <div>
+            <div class="glass-card" style="text-align: center; padding: 2.5rem;">
+                <div class="customer-icon-lg" style="background: @customer.Color; margin: 0 auto 1.5rem;">
+                    <i class="fas @customer.Icon"></i>
+                </div>
+                <h2 style="margin: 0 0 0.25rem;">@customer.Name</h2>
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-family: monospace;">@customer.Id</span>
+            </div>
+        </div>
+
+        <div>
+            <div class="glass-card" style="margin-bottom: 2rem;">
+                <h3 style="margin-top: 0;">Contact Information</h3>
+                <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(99,102,241,0.15); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-envelope" style="color: var(--primary);"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Email</div>
+                            <div style="font-weight: 500;">@customer.Email</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(16,185,129,0.15); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-location-dot" style="color: #10b981;"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Location</div>
+                            <div style="font-weight: 500;">@customer.Location</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="glass-card" style="text-align: center; padding: 2rem;">
+                    <div style="font-size: 2.5rem; font-weight: 700; color: var(--accent);">@customer.ActiveShipments</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-top: 0.5rem;">Active Shipments</div>
+                </div>
+                <div class="glass-card" style="text-align: center; padding: 2rem;">
+                    <div style="font-size: 2.5rem; font-weight: 700; color: #10b981;">@customer.TotalSpent.ToString("C0")</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-top: 0.5rem;">Total Spent</div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .customer-icon-lg {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+</style>
+
+@code {
+    [Parameter] public string? Id { get; set; }
+    private Customer? customer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(Id))
+            customer = await CustomerService.GetCustomerByIdAsync(Id);
+    }
+
+    private void GoBack() => Navigation.NavigateTo("/customers");
+}

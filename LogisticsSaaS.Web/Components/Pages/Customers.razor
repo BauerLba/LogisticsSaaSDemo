@@ -2,6 +2,7 @@
 @using LogisticsSaaS.Core.Application.Services
 @using LogisticsSaaS.Core.Domain.Entities
 @inject CustomerService CustomerService
+@inject NavigationManager Navigation
 @rendermode InteractiveServer
 
 <div class="dashboard-container">
@@ -10,7 +11,7 @@
             <h1 style="margin: 0; font-size: 2.5rem;">Customers</h1>
             <p style="color: var(--text-muted);">Manage your partner network and client relations</p>
         </div>
-        <button class="btn-primary">
+        <button class="btn-primary" @onclick='() => Navigation.NavigateTo("/customers/new")'>
             <i class="fas fa-plus"></i> Add Customer
         </button>
     </div>
@@ -26,7 +27,7 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
             @foreach (var customer in customers)
             {
-                <div class="glass-card customer-card">
+                <div class="glass-card customer-card" @onclick='() => Navigation.NavigateTo($"/customer/{customer.Id}")'>
                     <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
                         <div class="customer-icon" style="background: @customer.Color">
                             <i class="fas @customer.Icon"></i>

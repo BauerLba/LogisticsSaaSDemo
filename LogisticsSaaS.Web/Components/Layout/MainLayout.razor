@@ -1,5 +1,8 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@using LogisticsSaaS.Core.Application.Services
+@using LogisticsSaaS.Core.Domain.Entities
 @inject NavigationManager Navigation
+@inject ShipmentService ShipmentService
 
 <div class="nav-sidebar">
     <div class="sidebar-logo">
@@ -13,7 +16,7 @@
                 SaaS</small>
             </div>
         </div>
-    
+
         <nav class="sidebar-nav">
             <ul style="list-style: none; padding: 0; margin: 0;">
                 <li class="nav-group-label">Main Menu</li>
@@ -37,7 +40,7 @@
                         <i class="fas fa-users"></i> <span>Customers</span>
                     </NavLink>
                 </li>
-            
+
                 <li class="nav-group-label" style="margin-top: 2rem;">Operations</li>
                 <li>
                     <NavLink href="reports" class="nav-item">
@@ -51,7 +54,7 @@
                 </li>
             </ul>
         </nav>
-    
+
         <div class="sidebar-footer">
             <div class="system-status">
                 <div class="status-indicator"></div>
@@ -62,6 +65,8 @@
 
 @code {
     private string globalSearchTerm = "";
+    private bool showNotifications = false;
+    private IEnumerable<Shipment>? recentShipments;
 
     private void HandleGlobalSearch(KeyboardEventArgs e)
     {
@@ -69,6 +74,15 @@
         {
             Navigation.NavigateTo($"/shipment/{globalSearchTerm.Trim().ToUpper()}");
             globalSearchTerm = "";
+        }
+    }
+
+    private async Task ToggleNotifications()
+    {
+        showNotifications = !showNotifications;
+        if (showNotifications && recentShipments == null)
+        {
+            recentShipments = (await ShipmentService.GetActiveShipmentsAsync()).Take(5);
         }
     }
 }
@@ -81,12 +95,60 @@
                    @onkeyup="HandleGlobalSearch" />
             <kbd>Enter</kbd>
         </div>
-        
+
         <div class="header-actions">
-            <button class="icon-btn">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge"></span>
-            </button>
+            <div style="position: relative;">
+                <button class="icon-btn" @onclick="ToggleNotifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge"></span>
+                </button>
+
+                @if (showNotifications)
+                {
+                    <div style="position: absolute; top: calc(100% + 8px); right: 0; width: 320px; z-index: 500;"
+                         class="glass-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4 style="margin: 0; font-size: 0.95rem;">Active Shipments</h4>
+                            <button @onclick="() => showNotifications = false"
+                                    style="background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+                                <i class="fas fa-xmark"></i>
+                            </button>
+                        </div>
+                        @if (recentShipments == null)
+                        {
+                            <div style="text-align: center; padding: 1rem;">
+                                <i class="fas fa-circle-notch fa-spin" style="color: var(--primary);"></i>
+                            </div>
+                        }
+                        else if (!recentShipments.Any())
+                        {
+                            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem 0;">
+                                No active shipments.
+                            </p>
+                        }
+                        else
+                        {
+                            @foreach (var s in recentShipments)
+                            {
+                                <div style="display: flex; align-items: center; gap: 10px; padding: 0.6rem 0; border-bottom: 1px solid var(--glass-border); cursor: pointer;"
+                                     @onclick='() => { Navigation.NavigateTo($"/shipment/{s.TrackingNumber}"); showNotifications = false; }'>
+                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0;"></div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 0.8rem; font-family: monospace; color: var(--accent);">@s.TrackingNumber</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@s.Origin → @s.Destination</div>
+                                    </div>
+                                    <span class="status-badge status-@s.Status.ToString().ToLower()" style="font-size: 0.65rem; padding: 2px 8px;">@s.Status</span>
+                                </div>
+                            }
+                            <a href="/shipments" style="display: block; text-align: center; margin-top: 0.75rem; font-size: 0.8rem; color: var(--primary); text-decoration: none;"
+                               @onclick="() => showNotifications = false">
+                                View all shipments →
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+
             <div class="user-profile-summary">
                 <div class="user-info">
                     <span class="user-name">Lukas B.</span>
@@ -105,4 +167,3 @@
         </div>
     </main>
 </div>
-

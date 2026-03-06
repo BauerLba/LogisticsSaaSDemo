@@ -1,10 +1,19 @@
 @page "/settings"
+@using LogisticsSaaS.Core.Application.Services
+@inject AppSettingsService AppSettings
 @rendermode InteractiveServer
 
 <div class="dashboard-container">
     <h1 style="margin: 0; font-size: 2.5rem;">Settings</h1>
     <p style="color: var(--text-muted);">Configure your global logistics preferences</p>
-    
+
+    @if (isSaved)
+    {
+        <div style="margin-top: 1rem; padding: 0.75rem 1.25rem; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; color: #10b981; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-circle-check"></i> Settings saved successfully.
+        </div>
+    }
+
     <div style="display: grid; grid-template-columns: 300px 1fr; gap: 2rem; margin-top: 2rem;">
         <div class="glass-card" style="align-self: start;">
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
@@ -17,7 +26,7 @@
                 }
             </div>
         </div>
-    
+
         <div class="glass-card">
             <h3>@activeTab Preferences</h3>
             @if (activeTab == "General")
@@ -25,66 +34,72 @@
                 <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem;">
                     <div>
                         <label class="settings-label">Currency</label>
-                        <select class="tracking-input" style="width: 100%;">
+                        <select class="tracking-input" style="width: 100%;" @bind="AppSettings.Currency">
                             <option>USD ($)</option>
                             <option>EUR (€)</option>
                             <option>GBP (£)</option>
+                            <option>JPY (¥)</option>
                         </select>
                     </div>
                     <div>
                         <label class="settings-label">Default Language</label>
-                        <select class="tracking-input" style="width: 100%;">
+                        <select class="tracking-input" style="width: 100%;" @bind="AppSettings.Language">
                             <option>English</option>
                             <option>German</option>
                             <option>French</option>
+                            <option>Spanish</option>
                         </select>
                     </div>
                     <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 1rem;">
                         <div>
                             <div style="font-weight: 600;">System Theme</div>
-                            <div style="font-size: 0.8rem; color: var(--text-muted);">Current theme: dark (preferred)</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Current: @(AppSettings.IsDarkMode ? "Dark" : "Light")</div>
                         </div>
                         <div @onclick="ToggleDark"
-                             style="width: 50px; height: 26px; background: @(isDark ? "var(--primary)" : "#334155"); border-radius: 13px; position: relative; cursor: pointer; transition: 0.3s;">
+                             style="width: 50px; height: 26px; background: @(AppSettings.IsDarkMode ? "var(--primary)" : "#334155"); border-radius: 13px; position: relative; cursor: pointer; transition: 0.3s;">
                             <div
-                                style="width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; transition: 0.3s; left: @(isDark ? "27px" : "3px"); top: 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                style="width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; transition: 0.3s; left: @(AppSettings.IsDarkMode ? "27px" : "3px"); top: 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                             </div>
                         </div>
                     </div>
-                    <button class="btn-primary" @onclick="Save" style="margin-top: 1rem; align-self: flex-start;">Save
-                        Changes</button>
-                    </div>
-                }
+                    <button class="btn-primary" @onclick="Save" style="margin-top: 1rem; align-self: flex-start;">
+                        <i class="fas fa-floppy-disk"></i> Save Changes
+                    </button>
+                </div>
+            }
             else
-                {
-                    <div style="text-align: center; padding: 4rem; opacity: 0.6;">
-                        <i class="fas fa-lock" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                        <p>Configuration for @activeTab is locked in demo mode.</p>
-                    </div>
-                }
-            </div>
+            {
+                <div style="text-align: center; padding: 4rem; opacity: 0.6;">
+                    <i class="fas fa-lock" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Configuration for @activeTab is locked in demo mode.</p>
+                </div>
+            }
         </div>
     </div>
+</div>
 
-    <style>
-        .settings-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-    </style>
+<style>
+    .settings-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+</style>
 
 @code {
     private string activeTab = "General";
     private List<string> tabs = new() { "General", "Notifications", "Security", "API Access" };
-    private bool isDark = true;
+    private bool isSaved = false;
 
-    private void ToggleDark() => isDark = !isDark;
-    
-    private void Save()
+    private void ToggleDark() => AppSettings.IsDarkMode = !AppSettings.IsDarkMode;
+
+    private async Task Save()
     {
-        // Simple mock behavior
+        isSaved = true;
+        StateHasChanged();
+        await Task.Delay(2500);
+        isSaved = false;
     }
 }

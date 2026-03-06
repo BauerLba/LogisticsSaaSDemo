@@ -1,4 +1,10 @@
 @page "/reports"
+@using LogisticsSaaS.Core.Application.Services
+@using LogisticsSaaS.Core.Domain.Entities
+@using LogisticsSaaS.Core.Domain.Enums
+@inject ShipmentService ShipmentService
+@inject IJSRuntime JS
+@rendermode InteractiveServer
 
 <div class="dashboard-container">
     <div style="margin-bottom: 2.5rem;">
@@ -13,7 +19,17 @@
             </div>
             <h3>Monthly Revenue</h3>
             <p>Financial summary of all completed shipments this month.</p>
-            <button class="btn-outline">Download PDF</button>
+            <button class="btn-outline" @onclick="DownloadPdf">
+                @if (isPdfLoading)
+                {
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                }
+                else
+                {
+                    <i class="fas fa-file-pdf"></i>
+                }
+                Download PDF
+            </button>
         </div>
         <div class="glass-card report-card">
             <div class="report-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
@@ -21,7 +37,10 @@
             </div>
             <h3>On-Time Delivery</h3>
             <p>Performance analysis of delivery schedules vs actual arrival.</p>
-            <button class="btn-outline">View Online</button>
+            <button class="btn-outline" @onclick="ToggleOnlineReport">
+                <i class="fas fa-@(showOnlineReport ? "eye-slash" : "eye")"></i>
+                @(showOnlineReport ? "Hide Report" : "View Online")
+            </button>
         </div>
         <div class="glass-card report-card">
             <div class="report-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
@@ -29,9 +48,48 @@
             </div>
             <h3>Route Efficiency</h3>
             <p>Detailed breakdown of transit times across major world routes.</p>
-            <button class="btn-outline">Export CSV</button>
+            <button class="btn-outline" @onclick="ExportCsv">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </button>
         </div>
     </div>
+
+    @if (showOnlineReport && shipments != null)
+    {
+        <div class="glass-card" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0;">On-Time Delivery Report</h3>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">@shipments.Count() shipments total</span>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--glass-border);">
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 600;">Tracking #</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 600;">Sender</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 600;">Route</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 600;">Status</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 600;">Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in shipments)
+                        {
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+                                <td style="padding: 0.75rem; font-family: monospace; color: var(--accent);">@s.TrackingNumber</td>
+                                <td style="padding: 0.75rem;">@s.SenderName</td>
+                                <td style="padding: 0.75rem; color: var(--text-muted);">@s.Origin → @s.Destination</td>
+                                <td style="padding: 0.75rem;">
+                                    <span class="status-badge status-@s.Status.ToString().ToLower()">@s.Status</span>
+                                </td>
+                                <td style="padding: 0.75rem; color: var(--text-muted);">@s.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
 
     <div class="glass-card" style="padding: 3rem; text-align: center;">
         <div style="margin-bottom: 1.5rem;">
@@ -39,7 +97,7 @@
         </div>
         <h2>AI-Driven Insights</h2>
         <p style="color: var(--text-muted); max-width: 600px; margin: 1rem auto;">
-            Our machine learning models are analyzing your historical data to predict future demand and optimize your supply chain. 
+            Our machine learning models are analyzing your historical data to predict future demand and optimize your supply chain.
             <strong>Custom report generation</strong> will be available in the next update.
         </p>
     </div>
@@ -75,6 +133,9 @@
         font-size: 0.85rem;
         margin-top: 1rem;
         transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
     .btn-outline:hover {
         background: rgba(255,255,255,0.05);
@@ -86,3 +147,36 @@
         100% { opacity: 0.6; transform: scale(1); }
     }
 </style>
+
+@code {
+    private IEnumerable<Shipment>? shipments;
+    private bool showOnlineReport = false;
+    private bool isPdfLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        shipments = await ShipmentService.GetAllShipmentsAsync();
+    }
+
+    private async Task ExportCsv()
+    {
+        if (shipments == null) return;
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("TrackingNumber,SenderName,ReceiverName,Origin,Destination,Weight,Status,CreatedAt");
+        foreach (var s in shipments)
+        {
+            sb.AppendLine($"{s.TrackingNumber},{s.SenderName},{s.ReceiverName},{s.Origin},{s.Destination},{s.Weight},{s.Status},{s.CreatedAt:yyyy-MM-dd}");
+        }
+        await JS.InvokeVoidAsync("downloadFile", "shipments-report.csv", sb.ToString());
+    }
+
+    private async Task DownloadPdf()
+    {
+        isPdfLoading = true;
+        await Task.Delay(200);
+        await JS.InvokeVoidAsync("printPage");
+        isPdfLoading = false;
+    }
+
+    private void ToggleOnlineReport() => showOnlineReport = !showOnlineReport;
+}
