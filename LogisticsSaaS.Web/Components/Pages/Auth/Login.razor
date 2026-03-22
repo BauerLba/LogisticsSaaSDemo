@@ -1,0 +1,72 @@
+@page "/login"
+@layout LogisticsSaaS.Web.Components.Layout.AuthLayout
+@using LogisticsSaaS.Infrastructure.Identity
+@using Microsoft.AspNetCore.Identity
+
+<PageTitle>Login – LogiFlow</PageTitle>
+
+<div class="auth-wrapper">
+    <div class="auth-card glass-card">
+        <div class="auth-logo">
+            <div class="logo-icon" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: var(--primary); border-radius: 12px; margin: 0 auto 1rem;">
+                <i class="fas fa-truck-fast" style="color: white; font-size: 1.2rem;"></i>
+            </div>
+            <h1 style="font-size: 1.5rem; margin: 0 0 0.25rem;">LogiFlow</h1>
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0 0 2rem;">Willkommen zurück</p>
+        </div>
+
+        @if (Error == "1")
+        {
+            <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.875rem; color: #f87171;">
+                <i class="fas fa-circle-exclamation" style="margin-right: 0.5rem;"></i>Ungültige E-Mail-Adresse oder Passwort.
+            </div>
+        }
+
+        <form method="post" action="/do-login">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.4rem; font-size: 0.875rem; color: var(--text-muted);">E-Mail</label>
+                <input type="email" name="email" placeholder="name@firma.de"
+                       style="width: 100%; padding: 0.65rem 1rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; box-sizing: border-box;" />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.4rem; font-size: 0.875rem; color: var(--text-muted);">Passwort</label>
+                <input type="password" name="password" placeholder="••••••••"
+                       style="width: 100%; padding: 0.65rem 1rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; box-sizing: border-box;" />
+            </div>
+
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 0.75rem; font-size: 0.95rem;">
+                Einloggen
+            </button>
+        </form>
+
+        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: var(--text-muted);">
+            Noch kein Konto?
+            <a href="/register" style="color: var(--primary); text-decoration: none; font-weight: 600;">Registrieren</a>
+        </p>
+    </div>
+</div>
+
+<style>
+    .auth-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-dark);
+        padding: 1rem;
+    }
+    .auth-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 2rem;
+    }
+    .auth-logo {
+        text-align: center;
+    }
+</style>
+
+@code {
+    [SupplyParameterFromQuery]
+    private string? Error { get; set; }
+}

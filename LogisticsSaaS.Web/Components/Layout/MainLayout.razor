@@ -1,6 +1,7 @@
 @inherits LayoutComponentBase
 @using LogisticsSaaS.Core.Application.Services
 @using LogisticsSaaS.Core.Domain.Entities
+@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
 @inject ShipmentService ShipmentService
 
@@ -64,9 +65,40 @@
     </div>
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
     private string globalSearchTerm = "";
     private bool showNotifications = false;
     private IEnumerable<Shipment>? recentShipments;
+    private string displayName = "User";
+    private string initials = "U";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationStateTask != null)
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+
+            if (!user.Identity?.IsAuthenticated ?? true)
+            {
+                Navigation.NavigateTo("/login", forceLoad: true);
+                return;
+            }
+
+            var name = user.FindFirst("DisplayName")?.Value
+                       ?? user.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+                       ?? user.Identity?.Name
+                       ?? "User";
+
+            displayName = name;
+            var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            initials = parts.Length >= 2
+                ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
+                : name.Length >= 1 ? name[0].ToString().ToUpper() : "U";
+        }
+    }
 
     private void HandleGlobalSearch(KeyboardEventArgs e)
     {
@@ -84,6 +116,11 @@
         {
             recentShipments = (await ShipmentService.GetActiveShipmentsAsync()).Take(5);
         }
+    }
+
+    private void Logout()
+    {
+        Navigation.NavigateTo("/logout", forceLoad: true);
     }
 }
 
@@ -151,13 +188,17 @@
 
             <div class="user-profile-summary">
                 <div class="user-info">
-                    <span class="user-name">Lukas B.</span>
+                    <span class="user-name">@displayName</span>
                     <span class="user-role">Administrator</span>
                 </div>
                 <div class="user-avatar">
-                    LM
+                    @initials
                 </div>
             </div>
+
+            <button class="icon-btn" @onclick="Logout" title="Abmelden" style="margin-left: 0.25rem;">
+                <i class="fas fa-right-from-bracket"></i>
+            </button>
         </div>
     </header>
 

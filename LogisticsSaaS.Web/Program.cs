@@ -1,6 +1,8 @@
 using LogisticsSaaS.Web.Components;
 using LogisticsSaaS.Infrastructure.Data;
+using LogisticsSaaS.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using LogisticsSaaS.Core.Application.Interfaces;
 using LogisticsSaaS.Infrastructure.Repositories;
 using LogisticsSaaS.Core.Application.Services;
@@ -13,7 +15,7 @@ builder.Services.AddRazorComponents()
 
 // Database Configuration
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? Environment.GetEnvironmentVariable("DATABASE_URL"); // Render often uses DATABASE_URL
+    ?? Environment.GetEnvironmentVariable("DATABASE_URL");
 
 if (!string.IsNullOrEmpty(connectionString))
 {
@@ -22,10 +24,33 @@ if (!string.IsNullOrEmpty(connectionString))
 }
 else
 {
-    // Fallback for local development if no DB is configured
     builder.Services.AddDbContext<LogisticsDbContext>(options =>
         options.UseInMemoryDatabase("LogisticsSaaS"));
 }
+
+// ASP.NET Core Identity
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.SignIn.RequireConfirmedAccount = false;
+})
+.AddEntityFrameworkStores<LogisticsDbContext>()
+.AddDefaultTokenProviders();
+
+// Cookie auth
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/login";
+    options.LogoutPath = "/logout";
+    options.AccessDeniedPath = "/login";
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.SlidingExpiration = true;
+});
+
+builder.Services.AddAuthorization();
 
 // Register Clean Architecture Layers
 builder.Services.AddScoped<IShipmentRepository, EfShipmentRepository>();
@@ -36,7 +61,7 @@ builder.Services.AddScoped<AppSettingsService>();
 
 var app = builder.Build();
 
-// Automatically apply migrations
+// Automatically apply migrations and seed data
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<LogisticsDbContext>();
@@ -44,9 +69,8 @@ using (var scope = app.Services.CreateScope())
     {
         dbContext.Database.Migrate();
     }
-
-    // Seed data if empty
     SeedData(dbContext);
+    await SeedDemoUserAsync(scope.ServiceProvider);
 }
 
 // Configure the HTTP request pipeline.
@@ -58,14 +82,78 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
+
+// Login endpoint (Blazor Server cannot set cookies over SignalR)
+app.MapPost("/do-login", async (HttpContext ctx, SignInManager<ApplicationUser> signInManager) =>
+{
+    var email = ctx.Request.Form["email"].ToString();
+    var password = ctx.Request.Form["password"].ToString();
+    var result = await signInManager.PasswordSignInAsync(email, password, isPersistent: true, lockoutOnFailure: false);
+    return result.Succeeded ? Results.Redirect("/") : Results.Redirect("/login?error=1");
+}).DisableAntiforgery();
+
+// Register endpoint
+app.MapPost("/do-register", async (HttpContext ctx, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager) =>
+{
+    var displayName = ctx.Request.Form["displayName"].ToString();
+    var email = ctx.Request.Form["email"].ToString();
+    var password = ctx.Request.Form["password"].ToString();
+    var confirmPassword = ctx.Request.Form["confirmPassword"].ToString();
+
+    if (password != confirmPassword)
+        return Results.Redirect("/register?error=password");
+
+    var user = new ApplicationUser
+    {
+        UserName = email,
+        Email = email,
+        DisplayName = displayName,
+        CreatedAt = DateTime.UtcNow
+    };
+
+    var result = await userManager.CreateAsync(user, password);
+    if (result.Succeeded)
+    {
+        await signInManager.SignInAsync(user, isPersistent: true);
+        return Results.Redirect("/");
+    }
+
+    var errorMsg = Uri.EscapeDataString(string.Join(" ", result.Errors.Select(e => e.Description)));
+    return Results.Redirect($"/register?error={errorMsg}");
+}).DisableAntiforgery();
+
+// Logout endpoint
+app.MapGet("/logout", async (SignInManager<ApplicationUser> signInManager) =>
+{
+    await signInManager.SignOutAsync();
+    return Results.Redirect("/login");
+});
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
 
-// Simple Seeding logic for the demo
+async Task SeedDemoUserAsync(IServiceProvider services)
+{
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+    const string email = "demo@logiflow.com";
+    if (await userManager.FindByEmailAsync(email) == null)
+    {
+        var user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            DisplayName = "Demo User",
+            CreatedAt = DateTime.UtcNow
+        };
+        await userManager.CreateAsync(user, "Demo123!");
+    }
+}
+
 void SeedData(LogisticsDbContext context)
 {
     if (!context.Customers.Any())
@@ -77,4 +165,3 @@ void SeedData(LogisticsDbContext context)
         context.SaveChanges();
     }
 }
-

@@ -1,9 +1,11 @@
 using LogisticsSaaS.Core.Domain.Entities;
+using LogisticsSaaS.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace LogisticsSaaS.Infrastructure.Data;
 
-public class LogisticsDbContext : DbContext
+public class LogisticsDbContext : IdentityDbContext<ApplicationUser>
 {
     public LogisticsDbContext(DbContextOptions<LogisticsDbContext> options) : base(options)
     {
