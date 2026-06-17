@@ -30,14 +30,14 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
                 <div>
                     <label class="form-label">Company / Name *</label>
-                    <InputText @bind-Value="newCustomer.Name" class="tracking-input" placeholder="e.g. Acme Corp" disabled="@isSubmitting" />
+                    <InputText @bind-Value="newCustomer.Name"  placeholder="e.g. Acme Corp" disabled="@isSubmitting" />
                     <ValidationMessage For="@(() => newCustomer.Name)" class="form-error-message">
                         <i class="fas fa-exclamation-circle"></i>
                     </ValidationMessage>
                 </div>
                 <div>
                     <label class="form-label">Email *</label>
-                    <InputText @bind-Value="newCustomer.Email" class="tracking-input" placeholder="e.g. ops@acme.com" disabled="@isSubmitting" />
+                    <InputText @bind-Value="newCustomer.Email"  placeholder="e.g. ops@acme.com" disabled="@isSubmitting" />
                     <ValidationMessage For="@(() => newCustomer.Email)" class="form-error-message">
                         <i class="fas fa-exclamation-circle"></i>
                     </ValidationMessage>
@@ -46,17 +46,17 @@
 
             <div style="margin-bottom: 1.5rem;">
                 <label class="form-label">Location</label>
-                <InputText @bind-Value="newCustomer.Location" class="tracking-input" placeholder="e.g. Berlin, Germany" disabled="@isSubmitting" />
+                <InputText @bind-Value="newCustomer.Location"  placeholder="e.g. Berlin, Germany" disabled="@isSubmitting" />
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                 <div>
                     <label class="form-label">Active Shipments</label>
-                    <InputNumber @bind-Value="newCustomer.ActiveShipments" class="tracking-input" disabled="@isSubmitting" />
+                    <InputNumber @bind-Value="newCustomer.ActiveShipments"  disabled="@isSubmitting" />
                 </div>
                 <div>
                     <label class="form-label">Total Spent ($)</label>
-                    <InputNumber @bind-Value="newCustomer.TotalSpent" class="tracking-input" disabled="@isSubmitting" />
+                    <InputNumber @bind-Value="newCustomer.TotalSpent"  disabled="@isSubmitting" />
                 </div>
             </div>
 

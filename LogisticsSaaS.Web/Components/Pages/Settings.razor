@@ -30,14 +30,14 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                 <div>
                     <label class="form-label">Display Name *</label>
-                    <InputText @bind-Value="profileModel.DisplayName" class="tracking-input" placeholder="Your name" disabled="@isUpdatingProfile" />
+                    <InputText @bind-Value="profileModel.DisplayName"  placeholder="Your name" disabled="@isUpdatingProfile" />
                     <ValidationMessage For="@(() => profileModel.DisplayName)" class="form-error-message">
                         <i class="fas fa-exclamation-circle"></i>
                     </ValidationMessage>
                 </div>
                 <div>
                     <label class="form-label">Email *</label>
-                    <InputText @bind-Value="profileModel.Email" type="email" class="tracking-input" placeholder="your@email.com" disabled="@isUpdatingProfile" />
+                    <InputText @bind-Value="profileModel.Email" type="email"  placeholder="your@email.com" disabled="@isUpdatingProfile" />
                     <ValidationMessage For="@(() => profileModel.Email)" class="form-error-message">
                         <i class="fas fa-exclamation-circle"></i>
                     </ValidationMessage>
@@ -78,7 +78,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                 <div>
                     <label class="form-label">Current Password *</label>
-                    <InputText @bind-Value="passwordModel.CurrentPassword" type="password" class="tracking-input" placeholder="••••••••" disabled="@isChangingPassword" />
+                    <InputText @bind-Value="passwordModel.CurrentPassword" type="password"  placeholder="••••••••" disabled="@isChangingPassword" />
                     <ValidationMessage For="@(() => passwordModel.CurrentPassword)" class="form-error-message">
                         <i class="fas fa-exclamation-circle"></i>
                     </ValidationMessage>
@@ -89,14 +89,14 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                 <div>
                     <label class="form-label">New Password *</label>
-                    <InputText @bind-Value="passwordModel.NewPassword" type="password" class="tracking-input" placeholder="Minimum 6 characters" disabled="@isChangingPassword" />
+                    <InputText @bind-Value="passwordModel.NewPassword" type="password"  placeholder="Minimum 6 characters" disabled="@isChangingPassword" />
                     <ValidationMessage For="@(() => passwordModel.NewPassword)" class="form-error-message">
                         <i class="fas fa-exclamation-circle"></i>
                     </ValidationMessage>
                 </div>
                 <div>
                     <label class="form-label">Confirm New Password *</label>
-                    <InputText @bind-Value="passwordModel.ConfirmPassword" type="password" class="tracking-input" placeholder="••••••••" disabled="@isChangingPassword" />
+                    <InputText @bind-Value="passwordModel.ConfirmPassword" type="password"  placeholder="••••••••" disabled="@isChangingPassword" />
                     <ValidationMessage For="@(() => passwordModel.ConfirmPassword)" class="form-error-message">
                         <i class="fas fa-exclamation-circle"></i>
                     </ValidationMessage>

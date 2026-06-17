@@ -31,16 +31,14 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
                 <div>
                     <label class="form-label">Sender Name *</label>
-                    <InputText @bind-Value="newShipment.SenderName" class="tracking-input"
-                               placeholder="e.g. Acme Corp" disabled="@isSubmitting" />
+                    <InputText @bind-Value="newShipment.SenderName"                                placeholder="e.g. Acme Corp" disabled="@isSubmitting" />
                     <ValidationMessage For="@(() => newShipment.SenderName)" class="form-error-message">
                         <i class="fas fa-exclamation-circle"></i>
                     </ValidationMessage>
                 </div>
                 <div>
                     <label class="form-label">Receiver Name *</label>
-                    <InputText @bind-Value="newShipment.ReceiverName" class="tracking-input"
-                               placeholder="e.g. John Doe" disabled="@isSubmitting" />
+                    <InputText @bind-Value="newShipment.ReceiverName"                                placeholder="e.g. John Doe" disabled="@isSubmitting" />
                     <ValidationMessage For="@(() => newShipment.ReceiverName)" class="form-error-message">
                         <i class="fas fa-exclamation-circle"></i>
                     </ValidationMessage>
@@ -50,16 +48,14 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
                 <div>
                     <label class="form-label">Origin Location *</label>
-                    <InputText @bind-Value="newShipment.Origin" class="tracking-input"
-                               placeholder="e.g. New York, US" disabled="@isSubmitting" />
+                    <InputText @bind-Value="newShipment.Origin"                                placeholder="e.g. New York, US" disabled="@isSubmitting" />
                     <ValidationMessage For="@(() => newShipment.Origin)" class="form-error-message">
                         <i class="fas fa-exclamation-circle"></i>
                     </ValidationMessage>
                 </div>
                 <div>
                     <label class="form-label">Destination Location *</label>
-                    <InputText @bind-Value="newShipment.Destination" class="tracking-input"
-                               placeholder="e.g. Tokyo, JP" disabled="@isSubmitting" />
+                    <InputText @bind-Value="newShipment.Destination"                                placeholder="e.g. Tokyo, JP" disabled="@isSubmitting" />
                     <ValidationMessage For="@(() => newShipment.Destination)" class="form-error-message">
                         <i class="fas fa-exclamation-circle"></i>
                     </ValidationMessage>
