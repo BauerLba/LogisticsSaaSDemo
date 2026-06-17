@@ -91,4 +91,10 @@ public class ShipmentService
 
         return csv.ToString();
     }
+
+    public async Task UpdateStatusAsync(Guid id, ShipmentStatus newStatus)
+    {
+        await _repository.UpdateStatusAsync(id, newStatus);
+        _auditService.Log("UPDATE", "Shipment", null, $"Updated shipment status to {newStatus}");
+    }
 }

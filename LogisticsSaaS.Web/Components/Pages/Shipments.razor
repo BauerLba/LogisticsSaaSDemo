@@ -25,30 +25,54 @@
         </div>
     </div>
 
-    <!-- Filters Card -->
+    <!-- Advanced Filters Card -->
     <div class="card mb-4">
-        <div style="display: grid; grid-template-columns: 1fr 200px; gap: 1rem; align-items: end;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">Filters</h3>
+            <button @onclick="ResetFilters" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; text-decoration: underline; font-size: 0.875rem;">
+                Reset All
+            </button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 1rem; align-items: end;">
+            <!-- Search -->
             <div>
                 <label for="search-shipment" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">
                     Search
                     @if (!string.IsNullOrWhiteSpace(searchTerm) && shipments != null)
                     {
-                        <span style="color: var(--text-tertiary); font-weight: 400;">(@filteredShipments?.Count() of @shipments.Count())</span>
+                        <span style="color: var(--text-tertiary);">(@filteredShipments?.Count())</span>
                     }
                 </label>
                 <input id="search-shipment"
                        type="text"
-                       placeholder="Search by Tracking #, Sender, Receiver..."
+                       placeholder="Tracking #, Sender, Receiver..."
                        @bind="searchTerm"
-                       @bind:event="oninput"
-                       style="width: 100%; padding: 0.625rem 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.875rem; background: var(--bg-primary); color: var(--text-primary); transition: all 150ms;" />
+                       @bind:event="oninput" />
             </div>
+
+            <!-- Date From -->
+            <div>
+                <label for="filter-date-from" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">From Date</label>
+                <input id="filter-date-from"
+                       type="date"
+                       @bind="filterDateFrom" />
+            </div>
+
+            <!-- Date To -->
+            <div>
+                <label for="filter-date-to" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">To Date</label>
+                <input id="filter-date-to"
+                       type="date"
+                       @bind="filterDateTo" />
+            </div>
+
+            <!-- Status Multi-Select -->
             <div>
                 <label for="filter-status" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">Status</label>
                 <select id="filter-status"
                         @bind="filterStatus"
-                        style="width: 100%; padding: 0.625rem 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.875rem; background: var(--bg-primary); color: var(--text-primary); cursor: pointer;">
-                    <option value="">All Statuses</option>
+                        multiple>
                     @foreach (var status in Enum.GetValues<ShipmentStatus>())
                     {
                         <option value="@status">@status</option>
@@ -58,12 +82,34 @@
         </div>
     </div>
 
+    <!-- Bulk Actions Bar -->
+    @if (selectedShipments.Any())
+    {
+        <div style="background: var(--primary-light); border: 1px solid var(--primary); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--text-primary); font-weight: 500;">@selectedShipments.Count selected</span>
+            <div style="display: flex; gap: 0.75rem;">
+                <select @bind="bulkStatusUpdate" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.375rem;">
+                    <option value="">Select new status...</option>
+                    @foreach (var status in Enum.GetValues<ShipmentStatus>())
+                    {
+                        <option value="@status">@status</option>
+                    }
+                </select>
+                <button @onclick="ApplyBulkUpdate" class="btn-primary" style="padding: 0.5rem 1rem;">Update Status</button>
+                <button @onclick="ClearSelection" class="btn-secondary" style="padding: 0.5rem 1rem;">Clear</button>
+            </div>
+        </div>
+    }
+
     <!-- Shipments Table -->
     <div class="card">
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
                 <thead>
                     <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-secondary); font-weight: 600; background: var(--bg-secondary);">
+                        <th style="padding: 1rem; text-align: center; width: 40px;">
+                            <input type="checkbox" @onchange="SelectAll" style="cursor: pointer;" />
+                        </th>
                         <th style="padding: 1rem; text-align: left;">TRACKING #</th>
                         <th style="padding: 1rem; text-align: left;">SENDER / RECEIVER</th>
                         <th style="padding: 1rem; text-align: left;">ORIGIN</th>
@@ -88,18 +134,27 @@
                         {
                             @foreach (var shipment in filteredShipments)
                             {
-                                <tr class="shipment-row" style="border-bottom: 1px solid var(--border-color);"
-                                    @onclick='() => Navigation.NavigateTo($"/shipment/{shipment.TrackingNumber}")'>
-                                    <td style="padding: 1rem; font-weight: 600; font-family: 'Monaco', 'Courier New', monospace; color: var(--primary);">
+                                <tr class="shipment-row" style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 1rem; text-align: center;" @onclick:stopPropagation="true">
+                                        <input type="checkbox"
+                                               @onchange="@((ChangeEventArgs e) => ToggleShipment(shipment.TrackingNumber, (bool)e.Value!))"
+                                               style="cursor: pointer;" />
+                                    </td>
+                                    <td style="padding: 1rem; font-weight: 600; font-family: 'Monaco', 'Courier New', monospace; color: var(--primary); cursor: pointer;"
+                                        @onclick='() => Navigation.NavigateTo($"/shipment/{shipment.TrackingNumber}")'>
                                         @shipment.TrackingNumber
                                     </td>
-                                    <td style="padding: 1rem;">
+                                    <td style="padding: 1rem; cursor: pointer;"
+                                        @onclick='() => Navigation.NavigateTo($"/shipment/{shipment.TrackingNumber}")'>
                                         <div style="font-weight: 500; color: var(--text-primary);">@shipment.SenderName</div>
                                         <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 0.25rem;">to @shipment.ReceiverName</div>
                                     </td>
-                                    <td style="padding: 1rem; color: var(--text-secondary);">@shipment.Origin</td>
-                                    <td style="padding: 1rem; color: var(--text-secondary);">@shipment.Destination</td>
-                                    <td style="padding: 1rem;">
+                                    <td style="padding: 1rem; color: var(--text-secondary); cursor: pointer;"
+                                        @onclick='() => Navigation.NavigateTo($"/shipment/{shipment.TrackingNumber}")'>@shipment.Origin</td>
+                                    <td style="padding: 1rem; color: var(--text-secondary); cursor: pointer;"
+                                        @onclick='() => Navigation.NavigateTo($"/shipment/{shipment.TrackingNumber}")'>@shipment.Destination</td>
+                                    <td style="padding: 1rem; cursor: pointer;"
+                                        @onclick='() => Navigation.NavigateTo($"/shipment/{shipment.TrackingNumber}")'>
                                         <span class="status-badge status-@shipment.Status.ToString().ToLower()">
                                             @shipment.Status
                                         </span>
@@ -185,10 +240,14 @@
     private IEnumerable<Shipment>? shipments;
     private string searchTerm = "";
     private string filterStatus = "";
+    private DateTime? filterDateFrom;
+    private DateTime? filterDateTo;
     private int currentPage = 1;
     private int pageSize = 10;
     private int totalCount = 0;
     private int totalPages = 1;
+    private HashSet<string> selectedShipments = new();
+    private string bulkStatusUpdate = "";
 
     private IEnumerable<Shipment>? filteredShipments
     {
@@ -201,7 +260,9 @@
                              s.TrackingNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                              s.SenderName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                              s.ReceiverName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
-                            (string.IsNullOrWhiteSpace(filterStatus) || s.Status.ToString() == filterStatus));
+                            (string.IsNullOrWhiteSpace(filterStatus) || s.Status.ToString() == filterStatus) &&
+                            (!filterDateFrom.HasValue || s.CreatedAt.Date >= filterDateFrom.Value.Date) &&
+                            (!filterDateTo.HasValue || s.CreatedAt.Date <= filterDateTo.Value.Date));
 
             totalCount = filtered.Count();
             totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
@@ -223,6 +284,66 @@
         if (page >= 1 && page <= totalPages)
         {
             currentPage = page;
+        }
+    }
+
+    private void ResetFilters()
+    {
+        searchTerm = "";
+        filterStatus = "";
+        filterDateFrom = null;
+        filterDateTo = null;
+        currentPage = 1;
+    }
+
+    private void ToggleShipment(string trackingNumber, bool isSelected)
+    {
+        if (isSelected)
+            selectedShipments.Add(trackingNumber);
+        else
+            selectedShipments.Remove(trackingNumber);
+    }
+
+    private void SelectAll(ChangeEventArgs e)
+    {
+        if ((bool)e.Value!)
+        {
+            selectedShipments.Clear();
+            foreach (var shipment in filteredShipments ?? Enumerable.Empty<Shipment>())
+            {
+                selectedShipments.Add(shipment.TrackingNumber);
+            }
+        }
+        else
+        {
+            selectedShipments.Clear();
+        }
+    }
+
+    private void ClearSelection()
+    {
+        selectedShipments.Clear();
+    }
+
+    private async Task ApplyBulkUpdate()
+    {
+        if (string.IsNullOrEmpty(bulkStatusUpdate) || !selectedShipments.Any())
+            return;
+
+        if (Enum.TryParse<ShipmentStatus>(bulkStatusUpdate, out var newStatus))
+        {
+            foreach (var tracking in selectedShipments)
+            {
+                var shipment = shipments?.FirstOrDefault(s => s.TrackingNumber == tracking);
+                if (shipment != null)
+                {
+                    await ShipmentService.UpdateStatusAsync(shipment.Id, newStatus);
+                }
+            }
+
+            selectedShipments.Clear();
+            bulkStatusUpdate = "";
+            shipments = await ShipmentService.GetActiveShipmentsAsync();
         }
     }
 
