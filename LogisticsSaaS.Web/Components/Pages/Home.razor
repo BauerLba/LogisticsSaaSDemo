@@ -57,7 +57,15 @@
     <!-- Active Shipments Table -->
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0;">Active Shipments</h2>
+            <div>
+                <h2 style="margin: 0;">Active Shipments</h2>
+                @if (!string.IsNullOrWhiteSpace(dashboardSearchTerm) && shipments != null)
+                {
+                    <p style="color: var(--text-tertiary); font-size: 0.875rem; margin: 0.25rem 0 0 0;">
+                        @filteredShipments?.Count() of @shipments.Count() results
+                    </p>
+                }
+            </div>
             <div style="flex: 1; max-width: 300px;">
                 <label for="search-tracking" class="text-sm text-muted font-600" style="display: block; margin-bottom: 0.5rem;">Search</label>
                 <input id="search-tracking"
@@ -84,17 +92,37 @@
                 <tbody>
                     @if (filteredShipments == null)
                     {
-                        <tr>
-                            <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-tertiary);">
-                                <i class="fas fa-circle-notch fa-spin" style="margin-right: 0.5rem;"></i> Loading data...
-                            </td>
-                        </tr>
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 1rem;">
+                                    <div class="skeleton skeleton-text" style="width: 120px;"></div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="skeleton skeleton-text" style="width: 150px;"></div>
+                                    <div class="skeleton skeleton-text" style="width: 120px; margin-top: 0.5rem;"></div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="skeleton skeleton-text" style="width: 100px;"></div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="skeleton skeleton-text" style="width: 80px;"></div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="skeleton skeleton-badge" style="width: 70px;"></div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="skeleton skeleton-text" style="width: 90px;"></div>
+                                </td>
+                            </tr>
+                        }
                     }
                     else if (!filteredShipments.Any())
                     {
                         <tr>
                             <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-tertiary);">
-                                No shipments found.
+                                <i class="fas fa-inbox" style="font-size: 2rem; opacity: 0.5; margin-bottom: 0.5rem;"></i>
+                                <p style="margin: 0;">No shipments found.</p>
                             </td>
                         </tr>
                     }

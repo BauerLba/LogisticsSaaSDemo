@@ -23,7 +23,13 @@
     <div class="card mb-4">
         <div style="display: grid; grid-template-columns: 1fr 200px; gap: 1rem; align-items: end;">
             <div>
-                <label for="search-shipment" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">Search</label>
+                <label for="search-shipment" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                    Search
+                    @if (!string.IsNullOrWhiteSpace(searchTerm) && shipments != null)
+                    {
+                        <span style="color: var(--text-tertiary); font-weight: 400;">(@filteredShipments?.Count() of @shipments.Count())</span>
+                    }
+                </label>
                 <input id="search-shipment"
                        type="text"
                        placeholder="Search by Tracking #, Sender, Receiver..."
@@ -67,7 +73,8 @@
                         {
                             <tr>
                                 <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-tertiary);">
-                                    No shipments found.
+                                    <i class="fas fa-inbox" style="font-size: 2rem; opacity: 0.5; margin-bottom: 0.5rem;"></i>
+                                    <p style="margin: 0;">No shipments found.</p>
                                 </td>
                             </tr>
                         }
@@ -75,7 +82,8 @@
                         {
                             @foreach (var shipment in filteredShipments)
                             {
-                                <tr class="shipment-row" style="border-bottom: 1px solid var(--border-color);">
+                                <tr class="shipment-row" style="border-bottom: 1px solid var(--border-color);"
+                                    @onclick='() => Navigation.NavigateTo($"/shipment/{shipment.TrackingNumber}")'>
                                     <td style="padding: 1rem; font-weight: 600; font-family: 'Monaco', 'Courier New', monospace; color: var(--primary);">
                                         @shipment.TrackingNumber
                                     </td>
@@ -102,11 +110,30 @@
                     }
                     else
                     {
-                        <tr>
-                            <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-tertiary);">
-                                <i class="fas fa-circle-notch fa-spin" style="margin-right: 0.5rem;"></i> Loading shipments...
-                            </td>
-                        </tr>
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 1rem;">
+                                    <div class="skeleton skeleton-text" style="width: 120px;"></div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="skeleton skeleton-text" style="width: 150px;"></div>
+                                    <div class="skeleton skeleton-text" style="width: 120px; margin-top: 0.5rem;"></div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="skeleton skeleton-text" style="width: 100px;"></div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="skeleton skeleton-text" style="width: 100px;"></div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="skeleton skeleton-badge" style="width: 70px;"></div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="skeleton skeleton-text" style="width: 80px;"></div>
+                                </td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
