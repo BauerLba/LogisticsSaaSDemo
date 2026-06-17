@@ -23,16 +23,18 @@
     <div class="card mb-4">
         <div style="display: grid; grid-template-columns: 1fr 200px; gap: 1rem; align-items: end;">
             <div>
-                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">Search</label>
-                <input type="text"
+                <label for="search-shipment" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">Search</label>
+                <input id="search-shipment"
+                       type="text"
                        placeholder="Search by Tracking #, Sender, Receiver..."
                        @bind="searchTerm"
                        @bind:event="oninput"
                        style="width: 100%; padding: 0.625rem 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.875rem; background: var(--bg-primary); color: var(--text-primary); transition: all 150ms;" />
             </div>
             <div>
-                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">Status</label>
-                <select @bind="filterStatus"
+                <label for="filter-status" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">Status</label>
+                <select id="filter-status"
+                        @bind="filterStatus"
                         style="width: 100%; padding: 0.625rem 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.875rem; background: var(--bg-primary); color: var(--text-primary); cursor: pointer;">
                     <option value="">All Statuses</option>
                     @foreach (var status in Enum.GetValues<ShipmentStatus>())
@@ -73,9 +75,7 @@
                         {
                             @foreach (var shipment in filteredShipments)
                             {
-                                <tr style="border-bottom: 1px solid var(--border-color); transition: background-color 150ms;"
-                                    onmouseover="this.style.backgroundColor='var(--bg-secondary)'"
-                                    onmouseout="this.style.backgroundColor='transparent'">
+                                <tr class="shipment-row" style="border-bottom: 1px solid var(--border-color);">
                                     <td style="padding: 1rem; font-weight: 600; font-family: 'Monaco', 'Courier New', monospace; color: var(--primary);">
                                         @shipment.TrackingNumber
                                     </td>

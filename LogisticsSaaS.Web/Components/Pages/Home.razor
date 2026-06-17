@@ -20,7 +20,7 @@
     </div>
 
     <!-- Stats Grid -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="stats-grid">
         <div class="card">
             <div class="text-muted text-sm font-600 mb-2">Total Shipments</div>
             <div style="font-size: 2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
@@ -56,13 +56,17 @@
 
     <!-- Active Shipments Table -->
     <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2>Active Shipments</h2>
-            <input type="text"
-                   placeholder="Search tracking number..."
-                   @bind="dashboardSearchTerm"
-                   @onkeyup="HandleDashboardSearch"
-                   style="width: 300px; padding: 0.5rem 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.875rem; background: var(--bg-secondary); color: var(--text-primary);" />
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">Active Shipments</h2>
+            <div style="flex: 1; max-width: 300px;">
+                <label for="search-tracking" class="text-sm text-muted font-600" style="display: block; margin-bottom: 0.5rem;">Search</label>
+                <input id="search-tracking"
+                       type="text"
+                       placeholder="Search tracking number..."
+                       @bind="dashboardSearchTerm"
+                       @onkeyup="HandleDashboardSearch"
+                       style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.875rem; background: var(--bg-secondary); color: var(--text-primary);" />
+            </div>
         </div>
 
         <div style="overflow-x: auto;">
@@ -98,10 +102,8 @@
                     {
                         @foreach (var shipment in filteredShipments)
                         {
-                            <tr style="border-bottom: 1px solid var(--border-color); transition: background-color 150ms; cursor: pointer;"
-                                @onclick='() => Navigation.NavigateTo($"/shipment/{shipment.TrackingNumber}")'
-                                onmouseover="this.style.backgroundColor='var(--bg-secondary)'"
-                                onmouseout="this.style.backgroundColor='transparent'">
+                            <tr class="shipment-row" style="border-bottom: 1px solid var(--border-color);"
+                                @onclick='() => Navigation.NavigateTo($"/shipment/{shipment.TrackingNumber}")'>
                                 <td style="padding: 1rem; font-family: 'Monaco', 'Courier New', monospace; font-weight: 600; color: var(--primary);">
                                     @shipment.TrackingNumber
                                 </td>

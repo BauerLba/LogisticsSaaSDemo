@@ -28,6 +28,23 @@
     --status-error: #ef4444;
     --status-info: #3b82f6;
 
+    /* Status Badge Colors */
+    --status-pending-bg: #fef3c7;
+    --status-pending-text: #b45309;
+    --status-pending-border: #fde68a;
+
+    --status-intransit-bg: #cffafe;
+    --status-intransit-text: #0c4a6e;
+    --status-intransit-border: #a5f3fc;
+
+    --status-delivered-bg: #dcfce7;
+    --status-delivered-text: #15803d;
+    --status-delivered-border: #bbf7d0;
+
+    --status-processing-bg: #f3e8ff;
+    --status-processing-text: #6b21a8;
+    --status-processing-border: #e9d5ff;
+
     /* Shadows - Subtle & Professional */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -127,6 +144,50 @@ h3 {
     margin-top: 2rem;
 }
 
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+/* Table Rows - Hover Support */
+.table-row,
+.shipment-row {
+    transition: background-color var(--transition-fast);
+    cursor: pointer;
+}
+
+.table-row:hover,
+.shipment-row:hover {
+    background-color: var(--bg-secondary);
+}
+
+/* Back Button */
+.btn-back {
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: var(--transition-fast);
+}
+
+.btn-back:hover {
+    color: var(--primary-hover);
+}
+
 /* Status Badges - Clear, Professional */
 .status-badge {
     display: inline-block;
@@ -140,27 +201,27 @@ h3 {
 }
 
 .status-pending {
-    background: #fef3c7;
-    color: #b45309;
-    border-color: #fde68a;
+    background: var(--status-pending-bg);
+    color: var(--status-pending-text);
+    border-color: var(--status-pending-border);
 }
 
 .status-intransit {
-    background: #cffafe;
-    color: #0c4a6e;
-    border-color: #a5f3fc;
+    background: var(--status-intransit-bg);
+    color: var(--status-intransit-text);
+    border-color: var(--status-intransit-border);
 }
 
 .status-delivered {
-    background: #dcfce7;
-    color: #15803d;
-    border-color: #bbf7d0;
+    background: var(--status-delivered-bg);
+    color: var(--status-delivered-text);
+    border-color: var(--status-delivered-border);
 }
 
 .status-processing {
-    background: #f3e8ff;
-    color: #6b21a8;
-    border-color: #e9d5ff;
+    background: var(--status-processing-bg);
+    color: var(--status-processing-text);
+    border-color: var(--status-processing-border);
 }
 
 /* Buttons - Professional States */
