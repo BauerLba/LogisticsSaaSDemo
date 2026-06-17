@@ -7,10 +7,12 @@ namespace LogisticsSaaS.Core.Application.Services;
 public class ShipmentService
 {
     private readonly IShipmentRepository _repository;
+    private readonly AuditService _auditService;
 
-    public ShipmentService(IShipmentRepository repository)
+    public ShipmentService(IShipmentRepository repository, AuditService? auditService = null)
     {
         _repository = repository;
+        _auditService = auditService ?? new AuditService();
     }
 
     public async Task<IEnumerable<Shipment>> GetAllShipmentsAsync()
@@ -33,6 +35,7 @@ public class ShipmentService
     {
         shipment.TrackingNumber = $"TRK-{DateTime.UtcNow.Ticks.ToString().Substring(10)}-{new Random().Next(100, 999)}";
         await _repository.AddAsync(shipment);
+        _auditService.Log("CREATE", "Shipment", null, $"Created shipment {shipment.TrackingNumber} from {shipment.Origin} to {shipment.Destination}");
     }
 
     public async Task<(IEnumerable<Shipment> Items, int TotalCount)> GetShipmentsAsync(int page = 1, int pageSize = 10)
@@ -72,5 +75,20 @@ public class ShipmentService
             .OrderBy(g => g.Key)
             .Select(g => (g.Key.ToString("MMM dd"), g.Count()))
             .ToList();
+    }
+
+    public async Task<string> ExportToCSVAsync()
+    {
+        var shipments = await GetActiveShipmentsAsync();
+        var csv = new System.Text.StringBuilder();
+
+        csv.AppendLine("Tracking Number,Sender,Receiver,Origin,Destination,Weight,Status,Created At,Estimated Delivery");
+
+        foreach (var shipment in shipments.OrderByDescending(s => s.CreatedAt))
+        {
+            csv.AppendLine($"\"{shipment.TrackingNumber}\",\"{shipment.SenderName}\",\"{shipment.ReceiverName}\",\"{shipment.Origin}\",\"{shipment.Destination}\",{shipment.Weight},\"{shipment.Status}\",\"{shipment.CreatedAt:yyyy-MM-dd HH:mm}\",\"{shipment.EstimatedDelivery?.ToShortDateString() ?? "TBD"}\"");
+        }
+
+        return csv.ToString();
     }
 }

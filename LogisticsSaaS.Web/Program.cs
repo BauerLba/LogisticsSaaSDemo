@@ -1,4 +1,5 @@
 using LogisticsSaaS.Web.Components;
+using LogisticsSaaS.Web.Hubs;
 using LogisticsSaaS.Infrastructure.Data;
 using LogisticsSaaS.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddSignalR();
 
 // Database Configuration
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -55,6 +58,7 @@ builder.Services.AddAuthorization();
 // Register Clean Architecture Layers
 builder.Services.AddScoped<IShipmentRepository, EfShipmentRepository>();
 builder.Services.AddScoped<ICustomerRepository, EfCustomerRepository>();
+builder.Services.AddSingleton<AuditService>();
 builder.Services.AddScoped<ShipmentService>();
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<AppSettingsService>();
@@ -131,6 +135,8 @@ app.MapGet("/logout", async (SignInManager<ApplicationUser> signInManager) =>
     await signInManager.SignOutAsync();
     return Results.Redirect("/login");
 });
+
+app.MapHub<ShipmentHub>("/hub/shipments");
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
