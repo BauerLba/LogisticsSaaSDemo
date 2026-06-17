@@ -1,105 +1,288 @@
-@page "/settings"
-@using LogisticsSaaS.Core.Application.Services
-@inject AppSettingsService AppSettings
+﻿@page "/settings"
+@using LogisticsSaaS.Infrastructure.Identity
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
 @rendermode InteractiveServer
 
-<div class="dashboard-container">
-    <h1 style="margin: 0; font-size: 2.5rem;">Settings</h1>
-    <p style="color: var(--text-muted);">Configure your global logistics preferences</p>
+<PageTitle>Settings | LogiFlow</PageTitle>
 
-    @if (isSaved)
+<div class="dashboard-container" style="max-width: 900px; margin: 0 auto;">
+    <div style="margin-bottom: 2.5rem;">
+        <h1 style="margin: 0 0 0.5rem 0; font-size: 2.5rem;">Settings</h1>
+        <p style="color: var(--text-tertiary); margin: 0;">Manage your account and preferences</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(successMessage))
     {
-        <div style="margin-top: 1rem; padding: 0.75rem 1.25rem; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; color: #10b981; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-circle-check"></i> Settings saved successfully.
+        <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; color: #10b981; font-size: 0.875rem;">
+            <i class="fas fa-circle-check" style="margin-right: 0.5rem;"></i>
+            @successMessage
         </div>
     }
 
-    <div style="display: grid; grid-template-columns: 300px 1fr; gap: 2rem; margin-top: 2rem;">
-        <div class="glass-card" style="align-self: start;">
-            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                @foreach (var tab in tabs)
-                {
-                    <button @onclick="() => activeTab = tab"
-                            style="text-align: left; padding: 1rem; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s; background: @(activeTab == tab ? "rgba(255,255,255,0.08)" : "transparent"); color: @(activeTab == tab ? "white" : "var(--text-muted)");">
-                        @tab
-                    </button>
-                }
-            </div>
-        </div>
+    <!-- Profile Settings -->
+    <div class="card mb-4">
+        <h2 style="margin-top: 0;">Profile Information</h2>
+        <EditForm Model="@profileModel" OnValidSubmit="UpdateProfile">
+            <DataAnnotationsValidator />
 
-        <div class="glass-card">
-            <h3>@activeTab Preferences</h3>
-            @if (activeTab == "General")
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div>
+                    <label class="form-label">Display Name *</label>
+                    <InputText @bind-Value="profileModel.DisplayName" class="tracking-input" placeholder="Your name" disabled="@isUpdatingProfile" />
+                    <ValidationMessage For="@(() => profileModel.DisplayName)" class="form-error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </ValidationMessage>
+                </div>
+                <div>
+                    <label class="form-label">Email *</label>
+                    <InputText @bind-Value="profileModel.Email" type="email" class="tracking-input" placeholder="your@email.com" disabled="@isUpdatingProfile" />
+                    <ValidationMessage For="@(() => profileModel.Email)" class="form-error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </ValidationMessage>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="submit" class="btn-primary" disabled="@isUpdatingProfile" style="padding: 0.8rem 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                    @if (isUpdatingProfile)
+                    {
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Saving...</span>
+                    }
+                    else
+                    {
+                        <i class="fas fa-save"></i>
+                        <span>Save Changes</span>
+                    }
+                </button>
+            </div>
+        </EditForm>
+    </div>
+
+    <!-- Password Change -->
+    <div class="card mb-4">
+        <h2 style="margin-top: 0;">Change Password</h2>
+        <EditForm Model="@passwordModel" OnValidSubmit="ChangePassword">
+            <DataAnnotationsValidator />
+
+            @if (!string.IsNullOrEmpty(passwordError))
             {
-                <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem;">
-                    <div>
-                        <label class="settings-label">Currency</label>
-                        <select class="tracking-input" style="width: 100%;" @bind="AppSettings.Currency">
-                            <option>USD ($)</option>
-                            <option>EUR (€)</option>
-                            <option>GBP (£)</option>
-                            <option>JPY (¥)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="settings-label">Default Language</label>
-                        <select class="tracking-input" style="width: 100%;" @bind="AppSettings.Language">
-                            <option>English</option>
-                            <option>German</option>
-                            <option>French</option>
-                            <option>Spanish</option>
-                        </select>
-                    </div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 1rem;">
-                        <div>
-                            <div style="font-weight: 600;">System Theme</div>
-                            <div style="font-size: 0.8rem; color: var(--text-muted);">Current: @(AppSettings.IsDarkMode ? "Dark" : "Light")</div>
-                        </div>
-                        <div @onclick="ToggleDark"
-                             style="width: 50px; height: 26px; background: @(AppSettings.IsDarkMode ? "var(--primary)" : "#334155"); border-radius: 13px; position: relative; cursor: pointer; transition: 0.3s;">
-                            <div
-                                style="width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; transition: 0.3s; left: @(AppSettings.IsDarkMode ? "27px" : "3px"); top: 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                            </div>
-                        </div>
-                    </div>
-                    <button class="btn-primary" @onclick="Save" style="margin-top: 1rem; align-self: flex-start;">
-                        <i class="fas fa-floppy-disk"></i> Save Changes
-                    </button>
+                <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; color: #f87171; font-size: 0.875rem;">
+                    <i class="fas fa-circle-exclamation" style="margin-right: 0.5rem;"></i>
+                    @passwordError
                 </div>
             }
-            else
-            {
-                <div style="text-align: center; padding: 4rem; opacity: 0.6;">
-                    <i class="fas fa-lock" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                    <p>Configuration for @activeTab is locked in demo mode.</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div>
+                    <label class="form-label">Current Password *</label>
+                    <InputText @bind-Value="passwordModel.CurrentPassword" type="password" class="tracking-input" placeholder="••••••••" disabled="@isChangingPassword" />
+                    <ValidationMessage For="@(() => passwordModel.CurrentPassword)" class="form-error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </ValidationMessage>
                 </div>
-            }
+                <div style="opacity: 0; pointer-events: none;"></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div>
+                    <label class="form-label">New Password *</label>
+                    <InputText @bind-Value="passwordModel.NewPassword" type="password" class="tracking-input" placeholder="Minimum 6 characters" disabled="@isChangingPassword" />
+                    <ValidationMessage For="@(() => passwordModel.NewPassword)" class="form-error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </ValidationMessage>
+                </div>
+                <div>
+                    <label class="form-label">Confirm New Password *</label>
+                    <InputText @bind-Value="passwordModel.ConfirmPassword" type="password" class="tracking-input" placeholder="••••••••" disabled="@isChangingPassword" />
+                    <ValidationMessage For="@(() => passwordModel.ConfirmPassword)" class="form-error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </ValidationMessage>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="submit" class="btn-primary" disabled="@isChangingPassword" style="padding: 0.8rem 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                    @if (isChangingPassword)
+                    {
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Updating...</span>
+                    }
+                    else
+                    {
+                        <i class="fas fa-lock"></i>
+                        <span>Update Password</span>
+                    }
+                </button>
+            </div>
+        </EditForm>
+    </div>
+
+    <!-- Notification Preferences -->
+    <div class="card">
+        <h2 style="margin-top: 0;">Notification Preferences</h2>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--bg-secondary); border-radius: 0.5rem;">
+                <div>
+                    <div style="font-weight: 500; color: var(--text-primary); margin-bottom: 0.25rem;">Shipment Updates</div>
+                    <div style="font-size: 0.875rem; color: var(--text-tertiary);">Get notified when shipments change status</div>
+                </div>
+                <input type="checkbox" @bind="notifyShipments" style="width: 1.25rem; height: 1.25rem; cursor: pointer;" />
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--bg-secondary); border-radius: 0.5rem;">
+                <div>
+                    <div style="font-weight: 500; color: var(--text-primary); margin-bottom: 0.25rem;">Email Notifications</div>
+                    <div style="font-size: 0.875rem; color: var(--text-tertiary);">Receive email alerts about important events</div>
+                </div>
+                <input type="checkbox" @bind="notifyEmail" style="width: 1.25rem; height: 1.25rem; cursor: pointer;" />
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--bg-secondary); border-radius: 0.5rem;">
+                <div>
+                    <div style="font-weight: 500; color: var(--text-primary); margin-bottom: 0.25rem;">Weekly Digest</div>
+                    <div style="font-size: 0.875rem; color: var(--text-tertiary);">Get a weekly summary of your logistics activity</div>
+                </div>
+                <input type="checkbox" @bind="notifyDigest" style="width: 1.25rem; height: 1.25rem; cursor: pointer;" />
+            </div>
+
+            <button @onclick="SaveNotificationPreferences" class="btn-primary" disabled="@isSavingNotifications" style="padding: 0.8rem 1.5rem; align-self: flex-end; display: flex; align-items: center; gap: 0.5rem;">
+                @if (isSavingNotifications)
+                {
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Saving...</span>
+                }
+                else
+                {
+                    <i class="fas fa-save"></i>
+                    <span>Save Preferences</span>
+                }
+            </button>
         </div>
     </div>
 </div>
 
-<style>
-    .settings-label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: var(--text-muted);
-    }
-</style>
-
 @code {
-    private string activeTab = "General";
-    private List<string> tabs = new() { "General", "Notifications", "Security", "API Access" };
-    private bool isSaved = false;
+    private ApplicationUser? currentUser;
+    private string? successMessage;
+    private string? passwordError;
 
-    private void ToggleDark() => AppSettings.IsDarkMode = !AppSettings.IsDarkMode;
+    private ProfileModel profileModel = new();
+    private PasswordModel passwordModel = new();
 
-    private async Task Save()
+    private bool isUpdatingProfile = false;
+    private bool isChangingPassword = false;
+    private bool isSavingNotifications = false;
+
+    private bool notifyShipments = true;
+    private bool notifyEmail = true;
+    private bool notifyDigest = false;
+
+    protected override async Task OnInitializedAsync()
     {
-        isSaved = true;
-        StateHasChanged();
-        await Task.Delay(2500);
-        isSaved = false;
+        currentUser = await UserManager.GetUserAsync(new System.Security.Claims.ClaimsPrincipal());
+        if (currentUser != null)
+        {
+            profileModel.DisplayName = currentUser.UserName ?? "";
+            profileModel.Email = currentUser.Email ?? "";
+        }
+    }
+
+    private async Task UpdateProfile()
+    {
+        try
+        {
+            isUpdatingProfile = true;
+            if (currentUser != null)
+            {
+                currentUser.UserName = profileModel.DisplayName;
+                currentUser.Email = profileModel.Email;
+                var result = await UserManager.UpdateAsync(currentUser);
+                if (result.Succeeded)
+                {
+                    successMessage = "Profile updated successfully!";
+                    await Task.Delay(3000);
+                    successMessage = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            successMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isUpdatingProfile = false;
+        }
+    }
+
+    private async Task ChangePassword()
+    {
+        try
+        {
+            isChangingPassword = true;
+            passwordError = null;
+
+            if (passwordModel.NewPassword != passwordModel.ConfirmPassword)
+            {
+                passwordError = "New passwords do not match.";
+                isChangingPassword = false;
+                return;
+            }
+
+            if (currentUser != null)
+            {
+                var result = await UserManager.ChangePasswordAsync(currentUser, passwordModel.CurrentPassword, passwordModel.NewPassword);
+                if (result.Succeeded)
+                {
+                    successMessage = "Password changed successfully!";
+                    passwordModel = new();
+                    await Task.Delay(3000);
+                    successMessage = null;
+                }
+                else
+                {
+                    passwordError = string.Join(", ", result.Errors.Select(e => e.Description));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            passwordError = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isChangingPassword = false;
+        }
+    }
+
+    private async Task SaveNotificationPreferences()
+    {
+        try
+        {
+            isSavingNotifications = true;
+            successMessage = "Notification preferences saved!";
+            await Task.Delay(2000);
+            successMessage = null;
+        }
+        finally
+        {
+            isSavingNotifications = false;
+        }
+    }
+
+    private class ProfileModel
+    {
+        public string DisplayName { get; set; } = "";
+        public string Email { get; set; } = "";
+    }
+
+    private class PasswordModel
+    {
+        public string CurrentPassword { get; set; } = "";
+        public string NewPassword { get; set; } = "";
+        public string ConfirmPassword { get; set; } = "";
     }
 }

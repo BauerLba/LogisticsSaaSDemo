@@ -4,6 +4,7 @@
 @using LogisticsSaaS.Core.Domain.Enums
 @inject ShipmentService ShipmentService
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 @rendermode InteractiveServer
 
 <PageTitle>Dashboard | LogiFlow</PageTitle>
@@ -17,6 +18,21 @@
         <button class="btn-primary" @onclick='() => Navigation.NavigateTo("/shipments/new")'>
             <i class="fas fa-plus"></i> New Shipment
         </button>
+    </div>
+
+    <!-- Analytics Charts -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+        <!-- Timeline Chart -->
+        <div class="card">
+            <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Shipments Over Time (Last 30 Days)</h3>
+            <canvas id="timelineChart" style="max-height: 300px;"></canvas>
+        </div>
+
+        <!-- Status Distribution Chart -->
+        <div class="card">
+            <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Status Distribution</h3>
+            <canvas id="statusChart" style="max-height: 300px;"></canvas>
+        </div>
     </div>
 
     <!-- Stats Grid -->
@@ -172,6 +188,36 @@
     protected override async Task OnInitializedAsync()
     {
         shipments = await ShipmentService.GetActiveShipmentsAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && shipments != null)
+        {
+            await InitializeCharts();
+        }
+    }
+
+    private async Task InitializeCharts()
+    {
+        try
+        {
+            var timeline = await ShipmentService.GetShipmentsTimelineAsync(30);
+            var labels = timeline.Select(x => x.Date).ToList();
+            var counts = timeline.Select(x => x.Count).ToList();
+
+            await JS.InvokeVoidAsync("initCharts.initTimelineChart", "timelineChart", labels, counts);
+
+            var statusDist = await ShipmentService.GetStatusDistributionAsync();
+            var statusLabels = statusDist.Keys.ToList();
+            var statusCounts = statusDist.Values.ToList();
+
+            await JS.InvokeVoidAsync("initCharts.initStatusChart", "statusChart", statusLabels, statusCounts);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initializing charts: {ex.Message}");
+        }
     }
 
     private void HandleDashboardSearch(KeyboardEventArgs e)
