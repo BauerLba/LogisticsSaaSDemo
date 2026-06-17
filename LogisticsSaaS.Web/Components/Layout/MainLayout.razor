@@ -7,16 +7,16 @@
 
 <div class="nav-sidebar">
     <div class="sidebar-logo">
-        <div class="logo-icon">
-            <i class="fas fa-truck-fast"></i>
-        </div>
-        <div>
-            <h2 style="margin: 0; font-size: 1.25rem; letter-spacing: -0.5px;">LogiFlow</h2>
-            <small
-                style="color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Enterprise
-                SaaS</small>
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0;">
+            <div class="logo-icon">
+                <i class="fas fa-truck-fast"></i>
+            </div>
+            <div>
+                <h2>LogiFlow</h2>
+                <small>Enterprise SaaS</small>
             </div>
         </div>
+    </div>
 
         <nav class="sidebar-nav">
             <ul style="list-style: none; padding: 0; margin: 0;">
@@ -142,12 +142,11 @@
 
                 @if (showNotifications)
                 {
-                    <div style="position: absolute; top: calc(100% + 8px); right: 0; width: 320px; z-index: 500;"
-                         class="glass-card">
+                    <div style="position: absolute; top: calc(100% + 8px); right: 0; width: 320px; z-index: 500; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1rem; box-shadow: var(--shadow-lg);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h4 style="margin: 0; font-size: 0.95rem;">Active Shipments</h4>
+                            <h4 style="margin: 0; font-size: 0.95rem; color: var(--text-primary);">Active Shipments</h4>
                             <button @onclick="() => showNotifications = false"
-                                    style="background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+                                    style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 0; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center;">
                                 <i class="fas fa-xmark"></i>
                             </button>
                         </div>
@@ -159,7 +158,7 @@
                         }
                         else if (!recentShipments.Any())
                         {
-                            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem 0;">
+                            <p style="color: var(--text-tertiary); font-size: 0.85rem; text-align: center; padding: 1rem 0;">
                                 No active shipments.
                             </p>
                         }
@@ -167,17 +166,19 @@
                         {
                             @foreach (var s in recentShipments)
                             {
-                                <div style="display: flex; align-items: center; gap: 10px; padding: 0.6rem 0; border-bottom: 1px solid var(--glass-border); cursor: pointer;"
-                                     @onclick='() => { Navigation.NavigateTo($"/shipment/{s.TrackingNumber}"); showNotifications = false; }'>
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-bottom: 1px solid var(--border-color); cursor: pointer; border-radius: 0.375rem; transition: background-color 150ms; background-color: transparent;"
+                                     @onclick='() => { Navigation.NavigateTo($"/shipment/{s.TrackingNumber}"); showNotifications = false; }'
+                                     onmouseover="this.style.backgroundColor='var(--bg-secondary)'"
+                                     onmouseout="this.style.backgroundColor='transparent'">
                                     <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0;"></div>
                                     <div style="flex: 1; min-width: 0;">
-                                        <div style="font-size: 0.8rem; font-family: monospace; color: var(--accent);">@s.TrackingNumber</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@s.Origin → @s.Destination</div>
+                                        <div style="font-size: 0.8rem; font-family: 'Monaco', monospace; color: var(--primary); font-weight: 500;">@s.TrackingNumber</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@s.Origin → @s.Destination</div>
                                     </div>
-                                    <span class="status-badge status-@s.Status.ToString().ToLower()" style="font-size: 0.65rem; padding: 2px 8px;">@s.Status</span>
+                                    <span class="status-badge status-@s.Status.ToString().ToLower()" style="font-size: 0.65rem;">@s.Status</span>
                                 </div>
                             }
-                            <a href="/shipments" style="display: block; text-align: center; margin-top: 0.75rem; font-size: 0.8rem; color: var(--primary); text-decoration: none;"
+                            <a href="/shipments" style="display: block; text-align: center; margin-top: 0.75rem; font-size: 0.8rem; color: var(--primary); text-decoration: none; padding: 0.5rem 0; border-radius: 0.375rem; transition: background-color 150ms;"
                                @onclick="() => showNotifications = false">
                                 View all shipments →
                             </a>

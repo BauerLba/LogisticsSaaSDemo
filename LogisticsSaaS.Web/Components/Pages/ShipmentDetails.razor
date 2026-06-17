@@ -8,94 +8,90 @@
 
 <PageTitle>Shipment @TrackingNumber | LogiFlow</PageTitle>
 
-<div style="margin-bottom: 2rem;">
+<div class="mb-4">
     <button @onclick="GoBack"
-            style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            style="background: transparent; border: none; color: var(--primary); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; font-weight: 500;">
         <i class="fas fa-arrow-left"></i> Back to Dashboard
     </button>
 </div>
 
 @if (shipment == null)
 {
-    <div class="glass-card" style="text-align: center; padding: 4rem;">
-        <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--primary);"></i>
-        <h2 style="margin-top: 1.5rem;">Finding Shipment...</h2>
+    <div class="card text-center" style="padding: 4rem;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary); margin-bottom: 1rem;"></i>
+        <h2 class="mt-4">Finding Shipment...</h2>
     </div>
 }
 else
 {
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        <!-- Main Content -->
         <div>
-            <div class="glass-card" style="margin-bottom: 2rem;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <!-- Header Card -->
+            <div class="card mb-4">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
                     <div>
-                        <h1 style="margin: 0;">Shipment Details</h1>
-                        <p style="color: var(--accent); font-family: monospace; font-size: 1.2rem;">@shipment.TrackingNumber
+                        <h1 style="margin: 0 0 0.5rem 0;">Shipment Details</h1>
+                        <p style="color: var(--primary); font-family: 'Monaco', 'Courier New', monospace; font-size: 1.1rem; margin: 0;">
+                            @shipment.TrackingNumber
                         </p>
                     </div>
-                    <span class="status-badge status-@shipment.Status.ToString().ToLower()"
-                          style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                    <span class="status-badge status-@shipment.Status.ToString().ToLower()" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
                         @shipment.Status
                     </span>
                 </div>
 
                 <!-- Progress Tracker -->
-                <div style="margin: 3rem 0; display: flex; justify-content: space-between; position: relative;">
-                    <div
-                        style="position: absolute; top: 15px; left: 0; right: 0; height: 4px; background: rgba(255,255,255,0.1); z-index: 1;">
-                    </div>
-                    @{
-                        var currentStatus = shipment.Status;
-                        var statuses = new[] { 
-                            ShipmentStatus.Pending, 
-                            ShipmentStatus.Processing, 
-                            ShipmentStatus.InTransit, 
-                            ShipmentStatus.Delivered 
-                        };
-                    }
-                    @foreach (var status in statuses)
-                    {
-                        var isActive = (int)currentStatus >= (int)status;
-                        <div style="z-index: 2; text-align: center; width: 100px;">
-                            <div
-                                style="width: 34px; height: 34px; border-radius: 50%; background: @(isActive ? "var(--primary)" : "#1e293b"); border: 3px solid @(isActive ? "var(--accent)" : "rgba(255,255,255,0.1)"); margin: 0 auto; display: flex; align-items: center; justify-content: center;">
-                                @if ((int)currentStatus > (int)status)
-                                {
-                                    <i class="fas fa-check" style="font-size: 0.8rem;"></i>
-                                }
-                                else if (currentStatus == status)
-                                {
-                                    <div style="width: 10px; height: 10px; border-radius: 50%; background: white; animation: pulse 2s infinite;"></div>
-                                }
-                                else
-                                {
-                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2);"></div>
-                                }
-                            </div>
-                            <div
-                                style="margin-top: 0.5rem; font-size: 0.75rem; color: @(isActive ? "white" : "var(--text-muted)"); font-weight: @(currentStatus == status ? "700" : "400");">
-                                @status</div>
+                <div style="margin: 2.5rem 0;">
+                    <div style="display: flex; justify-content: space-between; position: relative;">
+                        <div style="position: absolute; top: 15px; left: 0; right: 0; height: 2px; background: var(--border-color);"></div>
+                        @{
+                            var statuses = new[] { ShipmentStatus.Pending, ShipmentStatus.Processing, ShipmentStatus.InTransit, ShipmentStatus.Delivered };
+                        }
+                        @foreach (var status in statuses)
+                        {
+                            var isActive = (int)shipment.Status >= (int)status;
+                            <div style="z-index: 2; text-align: center; position: relative;">
+                                <div style="width: 36px; height: 36px; border-radius: 50%; background: @(isActive ? "var(--primary)" : "var(--bg-secondary)"); border: 3px solid @(isActive ? "var(--primary)" : "var(--border-color)"); margin: 0 auto; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                    @if ((int)shipment.Status > (int)status)
+                                    {
+                                        <i class="fas fa-check" style="font-size: 0.8rem;"></i>
+                                    }
+                                    else if (shipment.Status == status)
+                                    {
+                                        <div style="width: 10px; height: 10px; border-radius: 50%; background: white; animation: pulse 2s infinite;"></div>
+                                    }
+                                </div>
+                                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: @(isActive ? "var(--text-primary)" : "var(--text-tertiary)"); font-weight: @(shipment.Status == status ? "600" : "400");">
+                                    @status
+                                </div>
                             </div>
                         }
+                    </div>
                 </div>
             </div>
 
-            <div class="glass-card">
-                <h3>Shipment History</h3>
-                <div style="margin-top: 1.5rem;">
+            <!-- History Card -->
+            <div class="card">
+                <h2 class="mt-0 mb-3">Shipment Timeline</h2>
+                <div>
                     @{
                         var history = GetHistory(shipment);
                     }
-                    @foreach (var item in history)
+                    @foreach (var (item, index) in history.Select((x, i) => (x, i)))
                     {
-                        <div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem;">
-                            <div style="color: var(--text-muted); font-size: 0.8rem; width: 100px;">@item.Time</div>
-                            <div style="position: relative; padding-left: 20px; border-left: 2px solid @(item.IsMain ? "var(--primary)" : "rgba(255,255,255,0.1)");">
-                                <div
-                                    style="position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: @(item.IsMain ? "var(--primary)" : "rgba(255,255,255,0.1)");">
-                                </div>
-                                <div style="font-weight: 600; color: @(item.IsMain ? "white" : "var(--text-muted)");">@item.Status</div>
-                                <div style="font-size: 0.85rem; color: var(--text-muted);">@item.Description</div>
+                        <div style="display: flex; gap: 1.5rem; @(index != history.Count - 1 ? "padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);" : "")">
+                            <div style="position: relative; width: 1.5rem; flex-shrink: 0;">
+                                <div style="position: absolute; top: 2px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; border-radius: 50%; background: @(item.IsMain ? "var(--primary)" : "var(--border-color)");"></div>
+                                @if (index != history.Count - 1)
+                                {
+                                    <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 2px; height: 40px; background: @(item.IsMain ? "var(--primary)" : "var(--border-color)");"></div>
+                                }
+                            </div>
+                            <div style="flex: 1; padding-top: 0.25rem;">
+                                <div class="font-600" style="color: var(--text-primary); margin-bottom: 0.25rem;">@item.Status</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">@item.Description</div>
+                                <div class="text-muted text-sm">@item.Time</div>
                             </div>
                         </div>
                     }
@@ -103,86 +99,100 @@ else
             </div>
         </div>
 
+        <!-- Sidebar -->
         <div>
-            <div class="glass-card" style="margin-bottom: 2rem;">
-                <h3 style="margin-top: 0;">Info</h3>
-                <div style="margin-bottom: 1rem;">
-                    <div style="color: var(--text-muted); font-size: 0.8rem;">Sender</div>
-                    <div style="font-weight: 500;">@shipment.SenderName</div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">@shipment.Origin</div>
+            <!-- Info Card -->
+            <div class="card mb-4">
+                <h3 class="pt-0 mb-3">Shipment Info</h3>
+
+                <div class="mb-3 pb-3 border-bottom">
+                    <div class="text-muted text-sm font-600 uppercase mb-2">From</div>
+                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">@shipment.SenderName</div>
+                    <div class="text-muted text-sm">@shipment.Origin</div>
                 </div>
-                <div style="margin-bottom: 1rem;">
-                    <div style="color: var(--text-muted); font-size: 0.8rem;">Receiver</div>
-                    <div style="font-weight: 500;">@shipment.ReceiverName</div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">@shipment.Destination</div>
+
+                <div class="mb-3 pb-3 border-bottom">
+                    <div class="text-muted text-sm font-600 uppercase mb-2">To</div>
+                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">@shipment.ReceiverName</div>
+                    <div class="text-muted text-sm">@shipment.Destination</div>
                 </div>
-                <div style="margin-bottom: 1rem;">
-                    <div style="color: var(--text-muted); font-size: 0.8rem;">Weight / Size</div>
-                    <div style="font-weight: 500;">@shipment.Weight kg</div>
+
+                <div>
+                    <div class="text-muted text-sm font-600 uppercase mb-2">Weight</div>
+                    <div style="font-weight: 600; color: var(--text-primary);">@shipment.Weight kg</div>
                 </div>
             </div>
 
-            <div class="glass-card"
-                    style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(34, 211, 238, 0.2)); border-color: rgba(99, 102, 241, 0.3);">
-                <h3>Need Help?</h3>
-                <p style="font-size: 0.9rem; color: var(--text-muted);">If you have any questions regarding this shipment,
-                    please contact our support.</p>
-                    <button class="btn-primary" style="width: 100%; margin-top: 1rem;" @onclick="() => showSupportModal = true">Contact Support</button>
-                </div>
+            <!-- CTA Card -->
+            <div class="card" style="background: var(--primary-light); border-color: var(--primary-light);">
+                <h3 style="margin-top: 0; color: var(--primary);">Need Assistance?</h3>
+                <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0.5rem 0 1rem 0;">
+                    Contact our support team for help with this shipment.
+                </p>
+                <button class="btn-primary" style="width: 100%;" @onclick="() => showSupportModal = true">
+                    <i class="fas fa-headset"></i> Contact Support
+                </button>
             </div>
         </div>
-    }
+    </div>
+}
 
+<!-- Support Modal -->
 @if (showSupportModal)
 {
-    <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; align-items: center; justify-content: center;"
+    <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;"
          @onclick="() => showSupportModal = false">
-        <div class="glass-card" style="max-width: 480px; width: 90%; padding: 2.5rem; position: relative;"
+        <div class="card" style="max-width: 480px; width: 90%; position: relative;"
              @onclick:stopPropagation="true">
             <button @onclick="() => showSupportModal = false"
-                    style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">
+                    style="position: absolute; top: 1.5rem; right: 1.5rem; background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; font-size: 1.2rem; padding: 0.5rem; width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center;">
                 <i class="fas fa-xmark"></i>
             </button>
-            <div style="text-align: center; margin-bottom: 1.5rem;">
-                <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(99,102,241,0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+
+            <div class="text-center mb-4">
+                <div style="width: 60px; height: 60px; border-radius: 0.5rem; background: var(--primary-light); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
                     <i class="fas fa-headset" style="font-size: 1.5rem; color: var(--primary);"></i>
                 </div>
-                <h2 style="margin: 0;">Support</h2>
-                <p style="color: var(--text-muted); margin: 0.5rem 0 0;">Shipment <span style="font-family: monospace; color: var(--accent);">@TrackingNumber</span></p>
+                <h2 style="margin: 0 0 0.5rem 0;">Support</h2>
+                <p class="text-muted text-sm" style="margin: 0;">Tracking <span style="font-family: 'Monaco', 'Courier New', monospace; color: var(--primary);">@TrackingNumber</span></p>
             </div>
+
             <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
-                <div style="display: flex; align-items: center; gap: 12px; padding: 1rem; background: rgba(255,255,255,0.04); border-radius: 10px;">
-                    <i class="fas fa-envelope" style="color: var(--primary); width: 20px;"></i>
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">Email</div>
-                        <div style="font-weight: 500;">support@logiflow.com</div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--bg-secondary); border-radius: 0.5rem;">
+                    <i class="fas fa-envelope" style="color: var(--primary); width: 1.25rem; text-align: center;"></i>
+                    <div style="flex: 1;">
+                        <div class="text-muted text-sm font-600 uppercase">Email</div>
+                        <div class="font-500" style="color: var(--text-primary);">support@logiflow.com</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 12px; padding: 1rem; background: rgba(255,255,255,0.04); border-radius: 10px;">
-                    <i class="fas fa-phone" style="color: #10b981; width: 20px;"></i>
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">Phone</div>
-                        <div style="font-weight: 500;">+49 30 1234 5678</div>
+
+                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--bg-secondary); border-radius: 0.5rem;">
+                    <i class="fas fa-phone" style="color: var(--status-success); width: 1.25rem; text-align: center;"></i>
+                    <div style="flex: 1;">
+                        <div class="text-muted text-sm font-600 uppercase">Phone</div>
+                        <div class="font-500" style="color: var(--text-primary);">+49 30 1234 5678</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 12px; padding: 1rem; background: rgba(255,255,255,0.04); border-radius: 10px;">
-                    <i class="fas fa-clock" style="color: #f59e0b; width: 20px;"></i>
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">Hours</div>
-                        <div style="font-weight: 500;">Mon–Fri, 08:00–18:00 CET</div>
+
+                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--bg-secondary); border-radius: 0.5rem;">
+                    <i class="fas fa-clock" style="color: var(--status-warning); width: 1.25rem; text-align: center;"></i>
+                    <div style="flex: 1;">
+                        <div class="text-muted text-sm font-600 uppercase">Hours</div>
+                        <div class="font-500" style="color: var(--text-primary);">Mon–Fri, 08:00–18:00 CET</div>
                     </div>
                 </div>
             </div>
-            <button class="btn-primary" style="width: 100%;" @onclick="() => showSupportModal = false">Close</button>
+
+            <button class="btn-secondary" style="width: 100%; margin: 0;" @onclick="() => showSupportModal = false">Close</button>
         </div>
     </div>
 }
 
 <style>
     @@keyframes pulse {
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7); }
-        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 211, 238, 0); }
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+        0% { transform: scale(0.95); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(0.95); }
     }
 </style>
 
@@ -204,15 +214,13 @@ else
     private List<HistoryItem> GetHistory(Shipment s)
     {
         var list = new List<HistoryItem>();
-        
+        if (s.Status >= ShipmentStatus.Delivered)
+            list.Add(new() { Time = "Today, 04:15 PM", Status = "Delivered", Description = "Package has been successfully delivered.", IsMain = true });
         if (s.Status >= ShipmentStatus.InTransit)
-            list.Add(new HistoryItem { Time = "Today, 10:45 AM", Status = "In Transit", Description = $"Package is moving from {s.Origin} to {s.Destination}.", IsMain = s.Status == ShipmentStatus.InTransit });
-            
+            list.Add(new() { Time = "Today, 10:45 AM", Status = "In Transit", Description = $"Package is moving from {s.Origin} to {s.Destination}.", IsMain = true });
         if (s.Status >= ShipmentStatus.Processing)
-            list.Add(new HistoryItem { Time = "Yesterday, 02:30 PM", Status = "Processing", Description = "Package has been scanned at the distribution center.", IsMain = s.Status == ShipmentStatus.Processing });
-            
-        list.Add(new HistoryItem { Time = s.CreatedAt.ToString("MMM dd, hh:mm tt"), Status = "Created", Description = "Shipment instruction received.", IsMain = s.Status == ShipmentStatus.Pending });
-        
+            list.Add(new() { Time = "Yesterday, 02:30 PM", Status = "Processing", Description = "Package has been scanned at the distribution center.", IsMain = true });
+        list.Add(new() { Time = s.CreatedAt.ToString("MMM dd, hh:mm tt"), Status = "Pending", Description = "Shipment instruction received.", IsMain = true });
         return list;
     }
 
