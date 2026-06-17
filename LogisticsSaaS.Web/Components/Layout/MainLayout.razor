@@ -74,7 +74,6 @@
     [Inject]
     private NotificationService NotificationService { get; set; } = null!;
 
-    private string globalSearchTerm = "";
     private bool isDarkMode = false;
     private int unreadNotifications = 0;
     private string displayName = "User";
@@ -123,15 +122,6 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private void HandleGlobalSearch(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(globalSearchTerm))
-        {
-            Navigation.NavigateTo($"/shipment/{globalSearchTerm.Trim().ToUpper()}");
-            globalSearchTerm = "";
-        }
-    }
-
     private void Logout()
     {
         Navigation.NavigateTo("/logout", forceLoad: true);
@@ -140,14 +130,7 @@
 
 <div class="main-content">
     <header class="top-header">
-        <div class="header-search">
-            <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search tracking number (e.g. TRK-DEMO-123)..." @bind="globalSearchTerm"
-                   @onkeyup="HandleGlobalSearch" />
-            <kbd>Enter</kbd>
-        </div>
-
-        <div class="header-actions">
+        <div class="header-actions" style="margin-left: auto;">
             <button class="icon-btn" @onclick="ToggleDarkMode" title="Toggle dark mode">
                 <i class="fas @(isDarkMode ? "fa-sun" : "fa-moon")"></i>
             </button>
