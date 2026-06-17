@@ -1,0 +1,160 @@
+@page "/notifications"
+@using LogisticsSaaS.Core.Application.Services
+@using LogisticsSaaS.Infrastructure.Identity
+@using Microsoft.AspNetCore.Identity
+@inject NotificationService NotificationService
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Notifications | LogiFlow</PageTitle>
+
+<div class="dashboard-container" style="max-width: 800px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <h1 style="margin: 0 0 0.5rem 0;">Notifications</h1>
+            <p style="color: var(--text-tertiary); margin: 0;">@unreadCount unread</p>
+        </div>
+        @if (notifications?.Any() == true)
+        {
+            <button @onclick="MarkAllAsRead" class="btn-secondary" style="padding: 0.75rem 1.5rem;">
+                <i class="fas fa-check-double"></i> Mark All Read
+            </button>
+        }
+    </div>
+
+    @if (notifications == null)
+    {
+        <div class="card" style="text-align: center; padding: 3rem;">
+            <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary); margin-bottom: 1rem;"></i>
+            <p>Loading notifications...</p>
+        </div>
+    }
+    else if (!notifications.Any())
+    {
+        <div class="card" style="text-align: center; padding: 3rem;">
+            <i class="fas fa-inbox" style="font-size: 2.5rem; color: var(--text-tertiary); margin-bottom: 1rem; opacity: 0.5;"></i>
+            <h3 style="color: var(--text-tertiary); margin: 0;">All caught up!</h3>
+            <p style="color: var(--text-tertiary);">You have no notifications</p>
+        </div>
+    }
+    else
+    {
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            @foreach (var notification in notifications)
+            {
+                <div class="card" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 1.25rem; opacity: @(notification.IsRead ? 0.7 : 1); transition: all var(--transition-fast);">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <div style="width: 8px; height: 8px; border-radius: 50%; background: @GetNotificationColor(notification.Type); @(notification.IsRead ? "opacity: 0.3;" : "")"></div>
+                            <h4 style="margin: 0; @(notification.IsRead ? "color: var(--text-tertiary);" : "color: var(--text-primary); font-weight: 600;")">@notification.Title</h4>
+                            <span style="font-size: 0.75rem; color: var(--text-tertiary);">@GetRelativeTime(notification.CreatedAt)</span>
+                        </div>
+                        <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">@notification.Message</p>
+                        @if (!string.IsNullOrEmpty(notification.ActionUrl))
+                        {
+                            <a href="@notification.ActionUrl" style="color: var(--primary); text-decoration: none; font-size: 0.875rem; margin-top: 0.5rem; display: inline-block;">
+                                View Details →
+                            </a>
+                        }
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; margin-left: 1rem;">
+                        @if (!notification.IsRead)
+                        {
+                            <button @onclick="() => MarkAsRead(notification.Id)" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 0.5rem;" title="Mark as read">
+                                <i class="fas fa-circle"></i>
+                            </button>
+                        }
+                        <button @onclick="() => DeleteNotification(notification.Id)" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 0.5rem;" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private ApplicationUser? currentUser;
+    private List<LogisticsSaaS.Core.Application.Services.Notification>? notifications;
+    private int unreadCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await UserManager.GetUserAsync(new System.Security.Claims.ClaimsPrincipal());
+        if (currentUser != null)
+        {
+            LoadNotifications();
+
+            // Add some test notifications
+            if (!notifications.Any())
+            {
+                NotificationService.AddNotification(currentUser.Id,
+                    "Welcome to LogiFlow",
+                    "Your account has been created successfully. Start managing your shipments today!",
+                    "info");
+                NotificationService.AddNotification(currentUser.Id,
+                    "Shipment Delivered",
+                    "Your shipment TRK-202406-157 has been successfully delivered.",
+                    "success",
+                    "/shipment/TRK-202406-157");
+                LoadNotifications();
+            }
+        }
+    }
+
+    private void LoadNotifications()
+    {
+        if (currentUser != null)
+        {
+            notifications = NotificationService.GetNotifications(currentUser.Id, 50).ToList();
+            unreadCount = NotificationService.GetUnreadCount(currentUser.Id);
+        }
+    }
+
+    private void MarkAsRead(Guid notificationId)
+    {
+        if (currentUser != null)
+        {
+            NotificationService.MarkAsRead(currentUser.Id, notificationId);
+            LoadNotifications();
+        }
+    }
+
+    private void MarkAllAsRead()
+    {
+        if (currentUser != null)
+        {
+            NotificationService.MarkAllAsRead(currentUser.Id);
+            LoadNotifications();
+        }
+    }
+
+    private void DeleteNotification(Guid notificationId)
+    {
+        if (currentUser != null)
+        {
+            NotificationService.DeleteNotification(currentUser.Id, notificationId);
+            LoadNotifications();
+        }
+    }
+
+    private string GetNotificationColor(string type) => type switch
+    {
+        "success" => "#10b981",
+        "error" => "#ef4444",
+        "warning" => "#f59e0b",
+        "info" => "#3b82f6",
+        _ => "#6b7280"
+    };
+
+    private string GetRelativeTime(DateTime dateTime)
+    {
+        var diff = DateTime.UtcNow - dateTime;
+        return diff.TotalSeconds < 60 ? "just now"
+            : diff.TotalMinutes < 60 ? $"{(int)diff.TotalMinutes}m ago"
+            : diff.TotalHours < 24 ? $"{(int)diff.TotalHours}h ago"
+            : $"{(int)diff.TotalDays}d ago";
+    }
+}

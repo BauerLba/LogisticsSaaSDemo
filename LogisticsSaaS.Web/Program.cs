@@ -59,6 +59,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IShipmentRepository, EfShipmentRepository>();
 builder.Services.AddScoped<ICustomerRepository, EfCustomerRepository>();
 builder.Services.AddSingleton<AuditService>();
+builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddScoped<ShipmentService>();
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<AppSettingsService>();
